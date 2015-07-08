@@ -1,0 +1,32 @@
+{
+  "name": "jls",
+  "version": "0.0.1",
+  "description": "Jacob's Ladder School - Activity Tracking Application",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmhall/jls.git"
+  },
+  "author": "Matt Hall",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jmhall/jls/issues"
+  },
+  "homepage": "https://github.com/jmhall/jls#readme",
+  "dependencies": {
+    "body-parser": "^1.13.2",
+    "cookie-parser": "^1.3.5",
+    "errorhandler": "^1.4.1",
+    "express": "^4.13.1",
+    "express-session": "^1.11.3",
+    "method-override": "^2.3.3",
+    "morgan": "^1.6.1",
+    "multer": "^0.1.8",
+    "named-routes": "^2.0.1",
+    "passport": "^0.2.2",
+    "passport-azure-ad": "0.0.5"
+  }
+}

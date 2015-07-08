@@ -1,6 +1,29 @@
+'use strict';
+
+var express = require('express');
+var passport = require('passport');
 var http = require('http');
-var port = process.env.PORT || 8080;
-http.createServer(function(req, res) {
-    res.writeHead(200, { 'Content-Type': 'text/plain'} );
-    res.end("Jacob's Ladder - Activity Tracking Test App\n");
-}).listen(port);
+var config = require('./configure');
+
+var app = express();
+app = config(app);
+
+var server = http.createServer(app);
+var boot = function() {
+    server.listen(app.get('port'), function() {
+        console.info('Listening on port %s', app.get('port'));
+    });
+};
+
+var shutdown = function() { 
+    server.close();
+};
+
+if (require.main === module) {
+    boot();
+} else {
+    console.info('Running app as a module');
+    exports.boot = boot;
+    exports.shutdown = shutdown;
+}
+
