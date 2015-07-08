@@ -20,6 +20,7 @@ var shutdown = function() {
 };
 
 if (require.main === module) {
+    console.info('Booting');
     boot();
 } else {
     console.info('Running app as a module');
