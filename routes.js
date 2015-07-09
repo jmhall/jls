@@ -1,4 +1,4 @@
-var Router = require('named-routes');
+var passport = require('passport');
 
 var ensureAuthenticated = function(req, res, next) {
     if (req.isAuthenticated()) {
@@ -8,18 +8,34 @@ var ensureAuthenticated = function(req, res, next) {
     res.redirect('/login');
 };
 
-
-
 module.exports.initialize = function(app) {
-    var router = new Router();
-    router.extendExpress(app);
-    router.registerAppHelpers(app);
+    app.get('/', function(req, res) {
+        resStr = 'Home page.  User: ' + (req.user ? req.user.email : '(none)') +
+            '.  Flash message: ' + (req.flash('error') || '(none)');
 
-    app.get('/', 'home', function(req, res) {
-        res.send('This is the home page, user is ' + (req.user || '(none)')); 
+        res.send(resStr);
     });
 
-    app.get('/login', 'login', function(req, res) {
-        res.send('This is the login page');
+    app.get('/secured', ensureAuthenticated, function(req, res) {
+        res.send('This is a secured page, user is ' + (req.user ? req.user.email: '(none)'));
     });
+
+    app.get('/login', 
+            passport.authenticate('wsfed-saml2', {
+                successRedirect: '/secured',
+                failureRedirect: '/', 
+                failureFlash: true
+            }),
+            function(req, res) { res.redirect('/'); }
+   );
+
+    app.post('/login/callback', 
+             passport.authenticate('wsfed-saml2', {
+                 failureRedirect: '/',
+                 failureFlash: true
+             }),
+             function(req, res) {
+                 res.redirect('/');
+             }
+    );
 };
