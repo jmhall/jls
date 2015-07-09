@@ -9,21 +9,7 @@ var app = express();
 app = config(app);
 
 var server = http.createServer(app);
-var boot = function() {
-    server.listen(app.get('port'), function() {
-        console.info('Listening on port %s', app.get('port'));
-    });
-};
 
-var shutdown = function() { 
-    server.close();
-};
-
-if (require.main === module) {
-    boot();
-} else {
-    console.info('Running app as a module');
-    exports.boot = boot;
-    exports.shutdown = shutdown;
-}
-
+server.listen(app.get('port'), function() {
+    console.info('Listening on port %s', app.get('port'));
+});
