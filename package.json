@@ -2,7 +2,7 @@
   "name": "jls",
   "version": "0.0.1",
   "description": "Jacob's Ladder School - Activity Tracking Application",
-  "main": "app.js",
+  "main": "server/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
