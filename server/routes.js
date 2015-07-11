@@ -11,6 +11,7 @@ var ensureAuthenticated = function(req, res, next) {
 module.exports.initialize = function(app) {
     app.get('/', function(req, res) {
         resStr = 'Home page.  User: ' + (req.user ? req.user.email : '(none)') +
+            '.  Display name: ' + (req.user ? req.user.displayName : '(none)') + 
             '.  Flash message: ' + (req.flash('error') || '(none)');
 
         res.send(resStr);

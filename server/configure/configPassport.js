@@ -1,6 +1,7 @@
 var passport = require('passport');
 var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
 var util = require('util');
+var User = require('../models/user');
 
 module.exports = function(app) {
     var wsfedRealm = process.env.WSFED_REALM || 'https://JacobsLadder891.onmicrosoft.com/activitytracking_local';
@@ -13,45 +14,28 @@ module.exports = function(app) {
         logoutUrl: wsfedLogoutUrl
     };
 
-    var users = [];
-    var findByEmail = function(email, fn) {
-        for (var i = 0, len = users.length; i < len; i++) {
-            var user = users[i];
-            if (user.email === email) {
-                return fn(null, user);
-            }
-        }
-        return fn(null, null);
-    };
-
     var wsfedStrategy = new wsfedsaml2(passportConfig, function(profile, done) {
         if (!profile.email) {
             return done(new Error("No email found"), null);
         }
 
-        process.nextTick(function() {
-            findByEmail(profile.email, function(err, user) {
-                if (err) 
-                    return done(err);
-                // Auto-register
-                if (!user) {
-                    users.push(profile);
-                    return done(null, profile);
-                }
-
-                return done(null, user);
-            });
+        User.findOne({'azureId': profile.id }, function(err, user) {
+            if (err) 
+                return done(err);
+            if (!user) 
+                return done(null, false, { message: 'Unregistered user' });
+            return done(null, user);
         });
-    });
+   });
 
     passport.use(wsfedStrategy);
 
     passport.serializeUser(function(user, done) {
-        done(null, user.email);
+        done(null, user.id);
     });
 
     passport.deserializeUser(function(id, done) {
-        findByEmail(id, function(err, user) {
+        User.findById(id, function(err, user) {
             done(err, user);
         });
     });
