@@ -11,6 +11,7 @@ var multer = require('multer');
 var routes = require('../routes');
 var flash = require('connect-flash');
 var configPassport = require('./configPassport.js');
+var mongoose = require('mongoose');
 
 module.exports = function(app) {
     var cookieSecret = process.env.COOKIE_SECRET || 'my-secret-value';
@@ -21,12 +22,15 @@ module.exports = function(app) {
         path.join(__dirname, '../client');
     var uploadDir = process.env.NODE_UPLOAD_DIR || 
         path.join(__dirname, '../public/upload/temp');
+    var mongoDbConnStr = process.env.MONGOCONNSTR || 
+        'mongodb://localhost:27017/test';
 
     app.set('port', port);
     app.set('views', path.join(__dirname, 'views'));
     app.set('view engine', 'jade');
-
     
+    mongoose.connect(mongoDbConnStr);
+
     configPassport(app);
 
     // Configure middleware
@@ -54,10 +58,8 @@ module.exports = function(app) {
     } else if (process.env.NODE_ENV === 'production') {
         app.use(errorHandler());
     }
-
     
     routes.initialize(app);
-
 
     return app;
 };
