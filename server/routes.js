@@ -9,30 +9,29 @@ var ensureAuthenticated = function(req, res, next) {
 };
 
 module.exports.initialize = function(app) {
-    app.get('/', function(req, res) {
-        resStr = 'Home page.  User: ' + (req.user ? req.user.email : '(none)') +
-            '.  Display name: ' + (req.user ? req.user.displayName : '(none)') + 
-            '.  Flash message: ' + (req.flash('error') || '(none)');
-
-        res.send(resStr);
-    });
-
-    app.get('/secured', ensureAuthenticated, function(req, res) {
-        res.send('This is a secured page, user is ' + (req.user ? req.user.email: '(none)'));
+    app.get('/', ensureAuthenticated, function(req, res) {
+        var viewModel = {
+            userName: req.user.displayName
+        };
+        res.render('home', viewModel);
     });
 
     app.get('/login', 
             passport.authenticate('wsfed-saml2', {
-                successRedirect: '/secured',
-                failureRedirect: '/', 
+                successRedirect: '/',
+                failureRedirect: '/failedLogin', 
                 failureFlash: true
             }),
             function(req, res) { res.redirect('/'); }
    );
 
+   app.get('/failedLogin', function(req, res) {
+       var str = 'Failed to log in.  Error message: ' + (req.flash('error') || ('none'));
+   });
+
     app.post('/login/callback', 
              passport.authenticate('wsfed-saml2', {
-                 failureRedirect: '/',
+                 failureRedirect: '/failedLogin',
                  failureFlash: true
              }),
              function(req, res) {

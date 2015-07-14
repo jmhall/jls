@@ -19,14 +19,14 @@ module.exports = function(app) {
     var logFormat = process.env.NODE_LOG_FORMAT || 'dev';
     var port = process.env.PORT || 8080;
     var staticDir = process.env.NODE_STATIC_DIR || 
-        path.join(__dirname, '../client');
+        path.join(__dirname, '../../client');
     var uploadDir = process.env.NODE_UPLOAD_DIR || 
-        path.join(__dirname, '../public/upload/temp');
+        path.join(__dirname, '../../public/upload/temp');
     var mongoDbConnStr = process.env.MONGOCONNSTR || 
         'mongodb://localhost:27017/test';
 
     app.set('port', port);
-    app.set('views', path.join(__dirname, 'views'));
+    app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'jade');
     
     mongoose.connect(mongoDbConnStr);
@@ -35,6 +35,7 @@ module.exports = function(app) {
 
     // Configure middleware
     app.use(morgan(logFormat));
+    console.log('Configuring static dir: %s', staticDir);
     app.use('/public/', express.static(staticDir));
     app.use(cookieParser(cookieSecret));
     app.use(bodyParser.urlencoded({extended: true}));
