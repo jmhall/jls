@@ -12,6 +12,7 @@ var routes = require('../routes');
 var flash = require('connect-flash');
 var configPassport = require('./configPassport.js');
 var mongoose = require('mongoose');
+var RedisStore = require('connect-redis')(session);
 
 module.exports = function(app) {
     var cookieSecret = process.env.COOKIE_SECRET || 'my-secret-value';
@@ -24,6 +25,9 @@ module.exports = function(app) {
         path.join(__dirname, '../../public/upload/temp');
     var mongoDbConnStr = process.env.MONGOCONNSTR || 
         'mongodb://localhost:27017/test';
+    var redisHost = process.env.REDIS_HOST || 'localhost';
+    var redisPort = process.env.REDIS_PORT || 6379;
+    var redisPassword = process.env.REDIS_PASSWORD || '';
 
     app.set('port', port);
     app.set('views', path.join(__dirname, '../views'));
@@ -32,6 +36,12 @@ module.exports = function(app) {
     mongoose.connect(mongoDbConnStr);
 
     configPassport(app);
+
+    var redisOptions = {
+        host: redisHost,
+        port: redisPort,
+        pass: redisPassword
+    };
 
     // Configure middleware
     app.use(morgan(logFormat));
@@ -44,6 +54,7 @@ module.exports = function(app) {
     app.use(session({
         resave: false,
         saveUninitialized: false,
+        store: new RedisStore(redisOptions),
         secret: sessionSecret
     }));
     app.use(passport.initialize());
