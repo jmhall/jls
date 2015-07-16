@@ -27,6 +27,7 @@ module.exports.initialize = function(app) {
 
    app.get('/failedLogin', function(req, res) {
        var str = 'Failed to log in.  Error message: ' + (req.flash('error') || ('none'));
+	   res.send(str);
    });
 
     app.post('/login/callback', 
