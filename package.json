@@ -29,7 +29,7 @@
     "morgan": "^1.6.1",
     "multer": "^0.1.8",
     "passport": "^0.2.2",
-    "passport-azure-ad": "0.0.5"
+    "passport-azure-ad": "^1.0.0"
   },
   "devDependencies": {
     "del": "^1.2.0",
