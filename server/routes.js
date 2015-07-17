@@ -1,4 +1,7 @@
 var passport = require('passport');
+var authController = require('./controllers/auth');
+var homeController = require('./controllers/home');
+var teacherController = require('./controllers/teacher');
 
 var ensureAuthenticated = function(req, res, next) {
     if (req.isAuthenticated()) {
@@ -9,34 +12,16 @@ var ensureAuthenticated = function(req, res, next) {
 };
 
 module.exports.initialize = function(app) {
-    app.get('/', ensureAuthenticated, function(req, res) {
-        var viewModel = {
-            userName: req.user.displayName
-        };
-        res.render('home', viewModel);
-    });
+    app.get('/', ensureAuthenticated, homeController.home);
 
-    app.get('/login', 
-            passport.authenticate('wsfed-saml2', {
-                successRedirect: '/',
-                failureRedirect: '/failedLogin', 
-                failureFlash: true
-            }),
-            function(req, res) { res.redirect('/'); }
-   );
+    app.get('/login', authController.authenticate, function(req, res) { res.redirect('/'); });
 
-   app.get('/failedLogin', function(req, res) {
-       var str = 'Failed to log in.  Error message: ' + (req.flash('error') || ('none'));
-	   res.send(str);
-   });
+    app.get('/failedLogin', authController.failedLogin); 
 
-    app.post('/login/callback', 
-             passport.authenticate('wsfed-saml2', {
-                 failureRedirect: '/failedLogin',
-                 failureFlash: true
-             }),
-             function(req, res) {
-                 res.redirect('/');
-             }
-    );
+    app.post('/login/callback', authController.authenticate, function(req, res) { res.redirect('/'); });
+
+    app.all('/teacher', ensureAuthenticated);
+
+    app.get('/teacher', teacherController.home);
+
 };

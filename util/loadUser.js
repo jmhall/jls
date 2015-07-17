@@ -8,7 +8,8 @@ mongoose.connect(mongoDbConnStr);
 var user = new User({
     email: 'IT@jacobsladderschool.net',
     displayName: 'Matt H.',
-    azureId: '633a6037-f671-4ab0-960b-366e6cc9fcf5'
+    azureId: '633a6037-f671-4ab0-960b-366e6cc9fcf5',
+    isAdmin: true
 });
 
 user.save();

@@ -1,28 +1,5 @@
-doctype html
-html(lang="en-US")
-    head
-        meta(charset="utf-8")
-        meta(http-equiv="X-UA-Compatible" content="IE=edge")
-        meta(name="viewport" content="width=device-width, initial-scale=1")
-        link(rel="stylesheet", type="text/css", href="/public/style/style.css")
-        title: |Jacob's Ladder - Activity Tracking Application (TEST)
-    body
-        .site-wrapper
-            .site-wrapper-inner
-                .cover-container
-                    .masthead.clearfix
-                        .inner
-                            h3.masthead-brand: Cover
-                    .inner.cover
-                        p.lead
-                            a(href="#"): |Teacher view
-                            br
-                            a(href="#"): |Admin view
-                    .mastfoot
-                        .inner
-                            p: |Jacob's Ladder School - Activity Tracking Application
+extends ./layout.jade
 
-
-        script(src="/public/lib/jquery/jquery.min.js")
-        script(src="/public/lib/bootstrap/js/bootstrap.min.js")
-
+block content
+    h3: a(href="#"): |Admin view
+    h3: a(href="/teacher"): |Teacher view
