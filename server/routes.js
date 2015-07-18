@@ -14,14 +14,15 @@ var ensureAuthenticated = function(req, res, next) {
 module.exports.initialize = function(app) {
     app.get('/', ensureAuthenticated, homeController.home);
 
+    // Authentication routes
     app.get('/login', authController.authenticate, function(req, res) { res.redirect('/'); });
-
     app.get('/failedLogin', authController.failedLogin); 
-
     app.post('/login/callback', authController.authenticate, function(req, res) { res.redirect('/'); });
 
+
+    // Teacher routes
     app.all('/teacher', ensureAuthenticated);
 
     app.get('/teacher', teacherController.home);
-
+    app.get('/teacher/student/:studentId', teacherController.studentHome);
 };

@@ -10,8 +10,8 @@ var errorHandler = require('errorhandler');
 var multer = require('multer');
 var routes = require('../routes');
 var flash = require('connect-flash');
-var configPassport = require('./configPassport.js');
-var mongoose = require('mongoose');
+var configPassport = require('./configPassport');
+var configMongoose = require('./configMongoose');
 var RedisStore = require('connect-redis')(session);
 
 module.exports = function(app) {
@@ -23,8 +23,6 @@ module.exports = function(app) {
         path.join(__dirname, '../../client');
     var uploadDir = process.env.NODE_UPLOAD_DIR || 
         path.join(__dirname, '../../public/upload/temp');
-    var mongoDbConnStr = process.env.MONGOCONNSTR || 
-        'mongodb://localhost:27017/test';
     var redisHost = process.env.REDIS_HOST || 'localhost';
     var redisPort = process.env.REDIS_PORT || 6379;
     var redisPassword = process.env.REDIS_PASSWORD || '';
@@ -32,8 +30,9 @@ module.exports = function(app) {
     app.set('port', port);
     app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'jade');
-    
-    mongoose.connect(mongoDbConnStr);
+   
+
+    configMongoose.configure();
 
     configPassport(app);
 
@@ -61,15 +60,7 @@ module.exports = function(app) {
     app.use(passport.session());
     app.use(methodOverride());
     app.use(flash());
-
-    if (process.env.NODE_ENV === 'development') {
-        app.use(errorHandler({
-            dumpExceptions: true,
-            showStack: true
-        }));
-    } else if (process.env.NODE_ENV === 'production') {
-        app.use(errorHandler());
-    }
+    app.use(errorHandler());
     
     routes.initialize(app);
 

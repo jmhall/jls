@@ -1,0 +1,15 @@
+extends ./layout.jade
+
+block content
+    h2: =studentName
+    //-table.table.table-condensed.table-striped
+        //-thead
+            //-tr
+                //-th: Name
+        //-tbody
+            //-if (!students || students.length === 0)
+                //-tr: td: |(No students)
+            //-else 
+                //-each student in students
+                    //-tr
+                        //-td: a(href="/teacher/student/" + student.id): =student.displayName

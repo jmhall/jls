@@ -8,6 +8,9 @@ logs
 # environment configs
 *.env
 
+# Sample data we don't want in git
+util/data
+
 # Runtime data
 pids
 *.pid
