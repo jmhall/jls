@@ -185,6 +185,28 @@ function get1CheckTrackingData(step) {
     return { stepNum: stepNum, value: value };
 }
 
+function getPercentageData(step) {
+    var stepNum = -1;
+    var value = '';
+
+    step = parseInt(step);
+    if (step < 21) {
+        stepNum = 1;
+    } else if (step < 41) {
+        stepNum = 2;
+    } else if (step < 61) {
+        stepNum = 3;
+    } else if (step < 81) {
+        stepNum = 4;
+    } else  {
+        stepNum = 5;
+    }
+    
+    value = '1';
+
+    return { stepNum: stepNum, value: value };
+}
+
 function get3CheckLanguageTrackingData(step) {
     var stepNum = -1;
     var value = '';
@@ -282,6 +304,9 @@ function createEntry(studentId, sheetType, row) {
                     break;
                 case '1 Check':
                     trackingData = get1CheckTrackingData(step);
+                    break;
+                case 'Percentage':
+                    trackingData = getPercentageData(step);
                     break;
                 default:
                     return returnVal;
