@@ -1,17 +1,19 @@
-var mongoose = require('mongoose');
-var User = require('../server/models/user');
-var mongoDbConnStr = process.env.MONGOCONNSTR || 
-        'mongodb://localhost:27017/test';
+var db = require('../server/models');
 
-mongoose.connect(mongoDbConnStr);
+var email = 'IT@jacobsladderschool.net';
 
-var user = new User({
-    email: 'IT@jacobsladderschool.net',
+var user = {
     displayName: 'Matt H.',
     azureId: '633a6037-f671-4ab0-960b-366e6cc9fcf5',
     isAdmin: true
+};
+
+db.User.findOrCreate({where: {email: user.email}, defaults: user})
+.then(function() { 
+    console.log('OK!');
+}).catch(function(err) {
+    console.error('Error: ', err.message);
+}).then(function() {
+    db.sequelize.close();
 });
 
-user.save();
-
-mongoose.disconnect();

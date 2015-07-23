@@ -18,7 +18,10 @@ html(lang="en-US")
                     a.navbar-brand(href="#"): |Activity Tracking Application
                 div.navbar-collapse.collapse(id="navbar")
                     ul.nav.navbar-nav.navbar-right
-                        li: a(href="#"): =userName
+                        if !userName
+                            li: a(href="/login"): |Log in
+                        else 
+                            li: a(href="#"): =userName
  
         .container
             if (error) 

@@ -11,38 +11,28 @@ var multer = require('multer');
 var routes = require('../routes');
 var flash = require('connect-flash');
 var configPassport = require('./configPassport');
-var configMongoose = require('./configMongoose');
-var RedisStore = require('connect-redis')(session);
+var configRedis = require('./configRedis');
+
+var cookieSecret = process.env.COOKIE_SECRET || 'my-secret-value';
+var sessionSecret = process.env.SESSION_SECRET || 'my-secret-value';
+var logFormat = process.env.NODE_LOG_FORMAT || 'dev';
+var port = process.env.PORT || 8080;
+var staticDir = process.env.NODE_STATIC_DIR || 
+    path.join(__dirname, '../../client');
+var uploadDir = process.env.NODE_UPLOAD_DIR || 
+    path.join(__dirname, '../../public/upload/temp');
+
 
 module.exports = function(app) {
-    var cookieSecret = process.env.COOKIE_SECRET || 'my-secret-value';
-    var sessionSecret = process.env.SESSION_SECRET || 'my-secret-value';
-    var logFormat = process.env.NODE_LOG_FORMAT || 'dev';
-    var port = process.env.PORT || 8080;
-    var staticDir = process.env.NODE_STATIC_DIR || 
-        path.join(__dirname, '../../client');
-    var uploadDir = process.env.NODE_UPLOAD_DIR || 
-        path.join(__dirname, '../../public/upload/temp');
-    var redisHost = process.env.REDIS_HOST || 'localhost';
-    var redisPort = process.env.REDIS_PORT || 6379;
-    var redisPassword = process.env.REDIS_PASSWORD || '';
-
     app.set('port', port);
     app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'jade');
-   
-
-    configMongoose.configure();
 
     configPassport(app);
 
-    var redisOptions = {
-        host: redisHost,
-        port: redisPort,
-        pass: redisPassword
-    };
+    var redisStore = configRedis(session);
 
-    // Configure middleware
+     // Configure middleware
     app.use(morgan(logFormat));
     console.log('Configuring static dir: %s', staticDir);
     app.use('/public/', express.static(staticDir));
@@ -53,7 +43,7 @@ module.exports = function(app) {
     app.use(session({
         resave: false,
         saveUninitialized: false,
-        store: new RedisStore(redisOptions),
+        store: redisStore,
         secret: sessionSecret
     }));
     app.use(passport.initialize());

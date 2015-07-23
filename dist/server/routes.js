@@ -12,7 +12,7 @@ var ensureAuthenticated = function(req, res, next) {
 };
 
 module.exports.initialize = function(app) {
-    app.get('/', ensureAuthenticated, homeController.home);
+    app.get('/', homeController.home);
 
     // Authentication routes
     app.get('/login', authController.authenticate, function(req, res) { res.redirect('/'); });
