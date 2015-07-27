@@ -1,0 +1,23 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+var activityStatus = [
+    'Assigned',
+    'Working',
+    'Mastered', 
+    'GM'
+];
+
+var studentActivitySchema = new Schema({
+    id: Schema.Types.ObjectId,
+    code: String,
+    category: String,
+    categoryNum: Number,
+    title: String,
+    status: { type: String, enum: activityStatus }
+});
+
+var studentActivitiesSchema = new Schema({
+    studentId: {type: Schema.Types.ObjectId, index: true },
+    activities: [ studentActivitySchema ]
+});

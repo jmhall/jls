@@ -16,7 +16,8 @@ module.exports = {
       email: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: ''
+        defaultValue: '',
+        unique: true
       },
       azureId: {
         type: Sequelize.STRING
@@ -25,6 +26,11 @@ module.exports = {
           type: Sequelize.BOOLEAN,
           allowNull: false,
           defaultValue: false
+      },
+      password: {
+          type: Sequelize.STRING,
+          allowNull: false,
+          defaultValue: ''
       },
       createdAt: {
         allowNull: false,

@@ -1,7 +1,7 @@
 var passport = require('passport');
-var authController = require('./controllers/auth');
 var homeController = require('./controllers/home');
 var teacherController = require('./controllers/teacher');
+var authController = require('./controllers/auth');
 
 var ensureAuthenticated = function(req, res, next) {
     if (req.isAuthenticated()) {
@@ -15,6 +15,7 @@ module.exports.initialize = function(app) {
     app.get('/', homeController.home);
 
     // Authentication routes
+    //configureAuthRoutes(app);
     app.get('/login', authController.authenticate, function(req, res) { res.redirect('/'); });
     app.get('/failedLogin', authController.failedLogin); 
     app.post('/login/callback', authController.authenticate, function(req, res) { res.redirect('/'); });

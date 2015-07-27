@@ -54,6 +54,7 @@
     "gulp-nodemon": "^2.0.3",
     "gulp-plumber": "^1.0.1",
     "minimist": "^1.1.1",
+    "passport-local": "^1.0.0",
     "sequelize-cli": "^1.7.2"
   }
 }
