@@ -21,7 +21,13 @@ html(lang="en-US")
                         if !userName
                             li: a(href="/login"): |Log in
                         else 
-                            li: a(href="#"): =userName
+                            li.dropdown 
+                                a.dropdown-toggle(href="#", data-toggle="dropdown", role="button", aria-haspopup="true", aria-expanded="false") 
+                                    =userName 
+                                    span.caret
+                                    ul.dropdown-menu
+                                        li: a(href="/logout"): |Logout
+                            
  
         .container
             if (error) 

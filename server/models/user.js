@@ -4,8 +4,9 @@ module.exports = function(sequelize, DataTypes) {
     displayName: DataTypes.STRING,
     email: DataTypes.STRING,
     azureId: DataTypes.STRING,
-    isAdmin: {type: DataTypes.BOOLEAN, defaultValue: false},
-    password: DataTypes.STRING
+    isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false },
+    password: DataTypes.STRING,
+    active: { type: DataTypes.BOOLEAN, defaultValue: true }
   }, {
     classMethods: {
       associate: function(models) {

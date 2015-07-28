@@ -1,29 +1,25 @@
-var passport = require('passport');
+var ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 var homeController = require('./controllers/home');
 var teacherController = require('./controllers/teacher');
-var authController = require('./controllers/auth');
 
-var ensureAuthenticated = function(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
+module.exports.initialize = function(app, configureAuthRoutes) {
 
-    res.redirect('/login');
-};
+    configureAuthRoutes(app);
 
-module.exports.initialize = function(app) {
+    app.get('/loggedOut', function(req, res) {
+        res.send('Logged out.');
+    });
+
+    app.get('/failed', function(req, res) {
+        res.send('Failed login: ' + req.flash('error'));
+    });
+
+    app.use('/', ensureLoggedIn('/login'));
     app.get('/', homeController.home);
-
-    // Authentication routes
-    //configureAuthRoutes(app);
-    app.get('/login', authController.authenticate, function(req, res) { res.redirect('/'); });
-    app.get('/failedLogin', authController.failedLogin); 
-    app.post('/login/callback', authController.authenticate, function(req, res) { res.redirect('/'); });
 
 
     // Teacher routes
-    app.all('/teacher', ensureAuthenticated);
-
-    app.get('/teacher', teacherController.home);
-    app.get('/teacher/student/:studentId', teacherController.studentHome);
+    //app.all('/teacher', ensureLoggedIn('/login'));
+    //app.get('/teacher', teacherController.home);
+    //app.get('/teacher/student/:studentId', teacherController.studentHome);
 };

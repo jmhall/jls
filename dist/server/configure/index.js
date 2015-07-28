@@ -28,8 +28,21 @@ module.exports = function(app) {
     app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'jade');
 
-    configPassport(app);
+    // Get authentication configurator
+    var strategyName = process.env.USE_LOCAL_AUTH ? 'local' : 'wsfed-saml2';
 
+    if (strategyName === 'local') 
+        console.warn('Using local authentication');
+
+    authConfig = null;
+    if (strategyName === 'wsfed-saml2')
+        authConfig = require('./configWsFedSaml2');
+    else if (strategyName === 'local')
+        authConfig = require('./configLocalAuth');
+
+    authConfig.configurePassport(app);
+
+    // Configure Redis
     var redisStore = configRedis(session);
 
      // Configure middleware
@@ -52,7 +65,7 @@ module.exports = function(app) {
     app.use(flash());
     app.use(errorHandler());
     
-    routes.initialize(app);
+    routes.initialize(app, authConfig.configureRoutes);
 
     return app;
 };
