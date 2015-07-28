@@ -1,7 +1,6 @@
 var ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 var homeController = require('./controllers/home');
 var teacherController = require('./controllers/teacher');
-var passport = require('passport');
 
 module.exports.initialize = function(app, configureAuthRoutes) {
 
@@ -17,15 +16,6 @@ module.exports.initialize = function(app, configureAuthRoutes) {
 
     app.use('/', ensureLoggedIn('/login'));
     app.get('/', homeController.home);
-
-
-
-    // Experiment
-    // Authentication routes configured in configPassport
-    //configureAuthRoutes(app);
-    //app.get('/login', authController.authenticate, function(req, res) { res.redirect('/'); });
-    //app.get('/failedLogin', authController.failedLogin); 
-    //app.post('/login/callback', authController.authenticate, function(req, res) { res.redirect('/'); });
 
 
     // Teacher routes
