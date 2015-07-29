@@ -1,16 +1,23 @@
 'use strict';
 
-var trackingTypes = require('./trackingTypes');
-var ActivityChannel = require('./activityChannel');
+var trackingTypes = [
+	'3 CHECK', 
+	'1 CHECK', 
+	'% X25', 
+	'% X5', 
+	'% X4', 
+	'% X3', 
+	'Y/N', 
+	'S/S', 
+	'TIME',
+    'TAT',
+    'LOI',
+    'WKBK',
+	'UNKNOWN'
+];
 
 module.exports = function(sequelize, DataTypes) {
     var Activity = sequelize.define('Activity', {
-        //activityChannelId: {
-            //type: DataTypes.INTEGER,
-            //allowNull: false,
-            //references: { model: ActivityChannel }
-        //},
-
         code: {type: DataTypes.STRING, allowNull: false, unique: true},
         title: {type: DataTypes.STRING, allowNull: false},
         description: {type: DataTypes.TEXT, allowNull: false, defaultValue: ''},
@@ -20,7 +27,12 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         classMethods: {
             associate: function(models) {
-                Activity.hasOne(models.ActivityChannel);
+                Activity.hasOne(
+                    models.ActivityChannel, { foreignKey: 'activityChannelId' }
+                );
+                Activity.hasOne(
+                    models.ActivityCategory, { foreignKey: 'activityCategoryId' }
+                );
             }
         }
     });

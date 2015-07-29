@@ -4,9 +4,7 @@ var csv = require('csv');
 var path = require('path');
 var util = require('util');
 var moment = require('moment');
-var ActivityModel = require('../server/models/activity');
-var mongoose = require('mongoose');
-var configMongoose = require('../server/configure/configMongoose');
+var Activity = require('../server/models/activity');
 var fs = require('fs');
 
 
@@ -54,11 +52,6 @@ deleteExisting = ('d' in argv || 'delete' in argv);
 
 console.log(util.format('Using "%s", deleteExisting: %s\n', filename, deleteExisting));
 console.log(util.format('Using connStr: %s', configMongoose.connStr));
-
-mongoose.connect(configMongoose.connStr);
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
 
 var parseOpts = {
 	delimiter: ',',
@@ -152,7 +145,6 @@ var parser = csv.parse(parseOpts, function(err, data) {
 			console.error(err);
 		}
 		console.log('Done');
-		mongoose.connection.close();
 	});
 });
 
@@ -178,11 +170,11 @@ function deleteCollection(cb) {
 	});
 }
 
-db.once('open', function (callback) {
-	console.log('Connected');
-	if (deleteExisting) {
-		deleteCollection(parseCsv);
-	} else {
-		parseCsv();
-	}
-});
+//db.once('open', function (callback) {
+	//console.log('Connected');
+	//if (deleteExisting) {
+		//deleteCollection(parseCsv);
+	//} else {
+		//parseCsv();
+	//}
+//});
