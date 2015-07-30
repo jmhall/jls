@@ -1,9 +1,8 @@
 'use strict';
-var trackingTypes = require('../models/trackingTypes');
 
 module.exports = {
     up: function(queryInterface, Sequelize) {
-        return queryInterface.createTable('Activities', {
+        return queryInterface.createTable('Activity', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -14,19 +13,19 @@ module.exports = {
             activityChannelId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: { model: 'ActivityChannels' }
+                references: { model: 'ActivityChannel' }
             },
 
             activityCategoryId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: { model: 'ActivityCategories' }
+                references: { model: 'ActivityCategory' }
             },
 
             parentActivityId: {
                 type: Sequelize.INTEGER,
                 allowNull: true,
-                references: { model: 'Activities' }
+                references: { model: 'Activity' }
             },
 
             code: {
@@ -43,10 +42,10 @@ module.exports = {
                 allowNull: false,
                 defaultValue: ''
             },
-            trackingType: {
-                type: Sequelize.ENUM(trackingTypes),
+            trackingTypeId: {
+                type: Sequelize.INTEGER,
                 allowNull: false,
-                defaultValue: 'UNKNOWN'
+                references: { model: 'TrackingType'}
             },
             stepsAreProgressive: {
                 type: Sequelize.BOOLEAN,
@@ -69,6 +68,6 @@ module.exports = {
         });
     },
     down: function(queryInterface, Sequelize) {
-        return queryInterface.dropTable('Activities');
+        return queryInterface.dropTable('Activity');
     }
 };

@@ -6,6 +6,23 @@ var models = require('../server/models');
 var fs = require('fs');
 var bPromise = require('bluebird');
 
+var trackingTypes = [
+	'3 CHECK', 
+	'1 CHECK', 
+	'% X25', 
+	'% X5', 
+	'% X4', 
+	'% X3', 
+	'Y/N', 
+	'S/S', 
+	'TIME',
+    'TAT',
+    'LOI',
+    'WKBK',
+	'UNKNOWN'
+];
+
+
 var channels = [
     null,
     'Tactility',
@@ -84,6 +101,23 @@ function CreateChannels() {
     });
 }
 
+function CreateTrackingTypes() {
+    return models.TrackingType.count().then(function(count) {
+        if (count > 1) {
+            console.log('Skipping tracking type creation');
+            return;
+        }
+
+        var typeObjects = trackingTypes.map(function(type, index) {
+            if (type) {
+                return { code: type, name: '' };
+            }
+        }).filter(function(item) { return item; });
+
+        return models.TrackingType.bulkCreate(typeObjects);
+    });
+}
+
 function getParser(filename) {
     return new bPromise(function(resolve, reject) {
         var parser = csv.parse(parseOpts, function(err, data) {
@@ -118,14 +152,50 @@ function parseCode(code) {
 }
 
 function getCreatePromise(row) {
-    var a = {};
     var code = parseCode(row.Code);
     if (code) {
+        var a = models.Activity.build({ title: row.Activity, code: code.code });
+
         a.code = code.code;
         // TODO: parent activities
         a.title = row.Activity;
 
-        return models.Activity.create(a);
+        var getTrackingType = models.TrackingType.findOne({
+            where: { code: row['Tracking Type'].toUpperCase() }
+        });
+
+        var getChannel = models.ActivityChannel.findOne({
+            where: { channelNum: code.channel }
+        });
+
+        var getCategory = models.ActivityCategory.findOne({
+            where: { categoryNum: code.category }
+        });
+
+
+        return bPromise.join(getTrackingType, getChannel, getCategory, 
+                             function(trackingType, channel, category) { 
+
+            if (trackingType)
+                a.setTrackingType(trackingType, { save: false });
+            else
+                console.error('No tracking type returned for %s', row['Tracking Type']);
+
+            if (channel) 
+                a.setActivityChannel(channel, { save: false });
+            else
+                console.error('No channel returned for %s', code.channel);
+
+            if (category)
+                a.setActivityCategory(category, { save: false });
+            else
+                console.error('No category returned for %s', code.category);
+
+            return a;
+        }).then(function(a) {
+            if (a.code) 
+                return a.save();
+        });
     } else {
         return;
     }
@@ -138,6 +208,8 @@ models.Activity.truncate().then(function(count) {
     return CreateCategories();
 }).then(function() {
     return CreateChannels();
+}).then(function() {
+    return CreateTrackingTypes();
 }).then(function() {
     return getParser(filename);
 }).then(function(results) {
