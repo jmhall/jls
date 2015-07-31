@@ -6,6 +6,7 @@ var Sequelize = require('sequelize');
 var basename  = path.basename(module.filename);
 
 var options = { 
+    logging: false,
     define: { 
         freezeTableName: true,
     }

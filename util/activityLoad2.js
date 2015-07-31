@@ -202,7 +202,7 @@ function getCreatePromise(row) {
 
 }
 
-models.Activity.truncate().then(function(count) {
+models.Activity.destroy({ truncate: true, cascade: true }).then(function(count) {
     console.log('Deleted %d activities', count || 0);
 }).then(function() {
     return CreateCategories();
