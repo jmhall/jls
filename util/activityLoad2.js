@@ -151,6 +151,17 @@ function parseCode(code) {
 	return o;
 }
 
+function getCreateStepPromise(activity, stepNum, title) {
+    var s = models.ActivityStep.build({
+        stepNum: stepNum,
+        title: title
+    });
+
+    s.setActivity(activity, { save: false });
+
+    return s.save();
+}
+
 function getCreatePromise(row) {
     var code = parseCode(row.Code);
     if (code) {
@@ -194,7 +205,31 @@ function getCreatePromise(row) {
             return a;
         }).then(function(a) {
             if (a.code) 
-                return a.save();
+                return a.save().then(function(a) { 
+                    // Add steps
+                    if (!row['Step 1']) {
+                        var s = models.ActivityStep.build({
+                            stepNum: 1,
+                            title: 'Step 1',
+                            description: ''
+                        });
+
+                        s.setActivity(a, { save: false });
+
+                        return s.save();
+                    } else {
+                        // need to figure out how to add steps 1 - 5 where 2 - 5 might or might not exist
+                        var promises = [];
+                        for (var i = 1; i < 6; i++) {
+                           var colName = util.format('Step %d', i);
+                           if (row[colName]) {
+                               promises.push(getCreateStepPromise(a, i, row[colName]));
+                           }
+                        }
+
+                        return bPromise.all(promises);
+                    }
+               });
         });
     } else {
         return;
