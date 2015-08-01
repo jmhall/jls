@@ -1,23 +1,12 @@
 var argParse = require('minimist');
 var util = require('util');
 var path = require('path');
-var mongoose = require('mongoose');
 var csv = require('csv');
 var fs = require('fs');
 var moment = require('moment');
-var bluebird = require('bluebird');
-var configMongoose = require('../server/configure/configMongoose');
+var bPromise = require('bluebird');
 
-var Teacher = require('../server/models/teacher');
-var TrackingEntry = require('../server/models/trackingEntry');
-var Student = require('../server/models/student');
-var Activity = require('../server/models/activity');
-
-//mongoose.set('debug', true);
-
-
-// Constants
-var DBNAME = 'test';
+var models = require('../server/models'); 
 
 var sheetTypes = [
     '1 Check', 
@@ -27,6 +16,12 @@ var sheetTypes = [
     'YesNo'
 ];
 
+var parseOpts = {
+	delimiter: ',',
+	trim: true,
+	skip_empty_lines: true,
+	columns: true
+};
 
 function usage() {
     console.log(util.format('usage: %s <filename prefix>', path.basename(__filename, '.js')));
@@ -43,124 +38,115 @@ if (argv._.length > 0) {
 }
 
 console.log(util.format('Using "%s"', filenamePrefix));
-console.log(util.format('Using connStr: %s', configMongoose.connStr));
-
-mongoose.connect(configMongoose.connStr);
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error: '));
-
 
 var teachers = [
     {
         lookupInitials: 'AW',
         firstName: 'Allison',
-        lastName: 'Williams'
+        lastName: 'Williams',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     }, 
 
     {
         lookupInitials: 'BI',
         firstName: 'Bailey',
-        lastName: 'Iggy'
+        lastName: 'Iggy',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
-
     {
         lookupInitials: 'BJM',
         firstName: 'Billy Joe',
-        lastName: 'Martin'
+        lastName: 'Martin',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'CP',
         firstName: 'Charlie',
-        lastName: 'Perkins'
+        lastName: 'Perkins',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'EC',
         firstName: 'Edith',
-        lastName: 'Collins'
+        lastName: 'Collins',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'EN',
         firstName: 'Edward',
-        lastName: 'Naylor'
+        lastName: 'Naylor',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'KD',
         firstName: 'Katie',
-        lastName: 'Dee'
+        lastName: 'Dee',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'MN',
         firstName: 'Melissa',
-        lastName: 'Nelly'
+        lastName: 'Nelly',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'MRW',
         firstName: 'Mary Riley',
-        lastName: 'Williams'
+        lastName: 'Williams',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'SDI',
         firstName: 'Sadie Dee',
-        lastName: 'Ingrid'
+        lastName: 'Ingrid',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 
     {
         lookupInitials: 'SP',
         firstName: 'Sandy',
-        lastName: 'Parker'
+        lastName: 'Parker',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
     },
 ];
 
 var students = [
-    {displayName: 'Charlotte F',
+    {
+        displayName: 'Charlotte F',
         firstName: 'Charlotte',
-        lastName: 'F'}
+        lastName: 'F',
+        startDate: moment().subtract(1, 'days').startOf('day').toDate()
+    }
 ];
 
+function getParser(filename) {
+    return new bPromise(function(resolve, reject) {
+        var parser = csv.parse(parseOpts, function(err, data) {
+            if (err) 
+                reject(err);
+            else
+                resolve(data);
+        });
 
-function getParser(parseFilename) { 
-
-    // Otherwise return a promise that parses the file
-    var pStat = new mongoose.Promise();
-
-    fs.stat(parseFilename, function(err) { 
-        if(err) pStat.fulfill();
-        pStat.fulfill(true);
-    });
-
-    var pParser = new mongoose.Promise();
-
-    var parser = csv.parse({delimiter: ','}, function(err, data){
-        if (err) pParser.reject(err);
-        else pParser.fulfill(data);
-    });
-
-    return pStat.then(function(results) { 
-        if (results) {
-            fs.createReadStream(parseFilename).pipe(parser);
-            return pParser;
-        } else {
-            return;
-        }
+        fs.createReadStream(filename).pipe(parser);
     });
 }
 
 function removeData() {
-    var rmTeacher = Teacher.remove();
-    var rmEntry = TrackingEntry.remove();
-    var rmStudent = Student.remove();
+    var rmTeacher = models.Teacher.destroy({ truncate: true, cascade: true });
+    //var rmEntry = TrackingEntry.remove();
+    var rmStudent = models.Student.destroy({ truncate: true, cascade: true });
 
-    return rmTeacher
-    .then(function() { return rmEntry; })
-    .then(function() { return rmStudent; });
+    return rmStudent
+    .then(function() { return rmTeacher; });
+    //.then(function() { return rmStudent; });
 }
 
 function get1CheckTrackingData(step) {
@@ -292,7 +278,7 @@ function createEntry(studentId, sheetType, row) {
     };
 
 
-    return bluebird.Promise.join(findActivity, findTeacher, function(activity, teacher) {
+    return bPromise.Promise.join(findActivity, findTeacher, function(activity, teacher) {
         var returnVal = false;
 
         if (activity && teacher) {
@@ -348,83 +334,77 @@ function getEntryPromises(studentId, sheetType, rows) {
 }
 
 // Starts here
-db.once('open', function(callback) {
-    console.log('Connected');
 
-    removeData().then(function() {
-        console.log('Done with removing');
-    })
-    .then(function() {
-        return Teacher.create(teachers);
-    })
-    .then(function() {
-        return Student.create(students);
-    })
-    .then(function(results) {
-        var parseArray = sheetTypes.map(function(value) {
-            filename = util.format('%s%s.csv', filenamePrefix, value);
-            return getParser(filename);
-        });
-
-        return bluebird.Promise.all(parseArray);
-    })
-    .then(function(parseResults) {
-        returnObj = { parseResults: parseResults };
-
-        // Get student ID
-        return Student.findOne().then(function(student) { 
-            returnObj.student = student;
-
-            return returnObj;
-        });
-    })
-    .then(function(returnObj) {
-        if (!returnObj)
-            throw new Error('No returnObj');
-        else if (!returnObj.parseResults) 
-            throw new Error('No returnObj.parseResults');
-        else if (!returnObj.student) 
-            throw new Error('No returnObj.student');
-
-        studentId = returnObj.student.id;
-        results = returnObj.parseResults;
-
-
-        // We have an array of parsed results, with array entry index corresponding 
-        // to sheetTypes entry.
-
-        createEntriesArray = results.map(function(parsedResults, index) {
-            var sheetType = sheetTypes[index];
-            if (parsedResults) {
-                console.log('%s - %s rows returned', sheetType, parsedResults.length);
-                return getEntryPromises(studentId, sheetType, parsedResults);
-            } else {
-                return;
-            }
-        });
-
-        return createEntriesArray;
-
-        //return bluebird.Promise.all(reviewParsedDataArray);
-    })
-    .then(function(createEntriesArray) {
-        // So we need to do something here with all of the promises
-        
-        var allCreateEntryPromises = [];
-        for (var i = 0; i < createEntriesArray.length; i++) {
-            if (createEntriesArray[i])
-                allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
-        }
-        console.log('Queueing %d promises', allCreateEntryPromises.length);
-        return bluebird.Promise.all(allCreateEntryPromises);
-    })
-    .then(function(results) {
-        var validResults = results.filter(function(value) { return value ? true : false; });
-        console.log('%s valid results', validResults.length);
-        return TrackingEntry.create(validResults);
-    })
-    .then(function() {
-        console.log('Done with program');
-        mongoose.connection.close();
+removeData().then(function() {
+    console.log('Done with removing');
+})
+.then(function() {
+    return models.Teacher.bulkCreate(teachers);
+})
+.then(function() {
+    return models.Student.bulkCreate(students);
+})
+.then(function(results) {
+    var parseArray = sheetTypes.map(function(value) {
+        filename = util.format('%s%s.csv', filenamePrefix, value);
+        return getParser(filename);
     });
+
+    return bPromise.Promise.all(parseArray);
+})
+.then(function(parseResults) {
+    returnObj = { parseResults: parseResults };
+
+    // Get student ID
+    return models.Student.findOne().then(function(student) { 
+        returnObj.student = student;
+
+        return returnObj;
+    });
+})
+.then(function(returnObj) {
+    if (!returnObj)
+        throw new Error('No returnObj');
+    else if (!returnObj.parseResults) 
+        throw new Error('No returnObj.parseResults');
+    else if (!returnObj.student) 
+        throw new Error('No returnObj.student');
+
+    studentId = returnObj.student.id;
+    results = returnObj.parseResults;
+
+    // We have an array of parsed results, with array entry index corresponding 
+    // to sheetTypes entry.
+
+    //createEntriesArray = results.map(function(parsedResults, index) {
+        //var sheetType = sheetTypes[index];
+        //if (parsedResults) {
+            //console.log('%s - %s rows returned', sheetType, parsedResults.length);
+            //return getEntryPromises(studentId, sheetType, parsedResults);
+        //} else {
+            //return;
+        //}
+    //});
+
+    //return createEntriesArray;
+})
+.then(function(createEntriesArray) {
+    // So we need to do something here with all of the promises
+    
+    var allCreateEntryPromises = [];
+    //for (var i = 0; i < createEntriesArray.length; i++) {
+        //if (createEntriesArray[i])
+            //allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
+    //}
+    console.log('Queueing %d promises', allCreateEntryPromises.length);
+    //return bluebird.Promise.all(allCreateEntryPromises);
+})
+//.then(function(results) {
+    //var validResults = results.filter(function(value) { return value ? true : false; });
+    //console.log('%s valid results', validResults.length);
+    //return TrackingEntry.create(validResults);
+//})
+.finally(function() {
+    console.log('Done with program');
+    models.sequelize.close();
 });
