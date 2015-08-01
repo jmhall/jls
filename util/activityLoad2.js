@@ -206,29 +206,41 @@ function getCreatePromise(row) {
         }).then(function(a) {
             if (a.code) 
                 return a.save().then(function(a) { 
+                    // Need to add a 'Step 0' for 'Introduced'
+                    var promises = [];
+
+                    var s0 = models.ActivityStep.build({
+                        stepNum: 0,
+                        title: 'Introduced',
+                        description: 'Introduced'
+                    });
+
+                    s0.setActivity(a, { save: false });
+
+                    promises.push(s0.save());
+
                     // Add steps
                     if (!row['Step 1']) {
-                        var s = models.ActivityStep.build({
+                        var s1 = models.ActivityStep.build({
                             stepNum: 1,
                             title: 'Step 1',
                             description: ''
                         });
 
-                        s.setActivity(a, { save: false });
+                        s1.setActivity(a, { save: false });
 
-                        return s.save();
+                        promises.push(s1.save());
                     } else {
-                        // need to figure out how to add steps 1 - 5 where 2 - 5 might or might not exist
-                        var promises = [];
+                        // need to add steps 1 - 5 where 2 - 5 might or might not exist
                         for (var i = 1; i < 6; i++) {
                            var colName = util.format('Step %d', i);
                            if (row[colName]) {
                                promises.push(getCreateStepPromise(a, i, row[colName]));
                            }
                         }
-
-                        return bPromise.all(promises);
                     }
+
+                    return bPromise.all(promises);
                });
         });
     } else {
