@@ -9,23 +9,25 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-
             activityChannelId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: { model: 'ActivityChannel' }
             },
-
             activityCategoryId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: { model: 'ActivityCategory' }
             },
-
             parentActivityId: {
                 type: Sequelize.INTEGER,
                 allowNull: true,
                 references: { model: 'Activity' }
+            },
+            trackingTypeId: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                references: { model: 'TrackingType'}
             },
 
             code: {
@@ -41,11 +43,6 @@ module.exports = {
                 type: Sequelize.TEXT,
                 allowNull: false,
                 defaultValue: ''
-            },
-            trackingTypeId: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                references: { model: 'TrackingType'}
             },
             stepsAreProgressive: {
                 type: Sequelize.BOOLEAN,

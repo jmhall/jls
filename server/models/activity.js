@@ -19,6 +19,7 @@ module.exports = function(sequelize, DataTypes) {
                 Activity.belongsTo(
                     models.TrackingType, { foreignKey: 'trackingTypeId' }
                 );
+
                 Activity.hasMany(
                     models.ActivityStep, { as: 'Steps', foreignKey: 'activityId' }
                 );
