@@ -1,3 +1,5 @@
+'use strict';
+
 var argParse = require('minimist');
 var util = require('util');
 var path = require('path');
@@ -141,12 +143,12 @@ function getParser(filename) {
 
 function removeData() {
     var rmTeacher = models.Teacher.destroy({ truncate: true, cascade: true });
-    //var rmEntry = TrackingEntry.remove();
+    var rmEntry = models.TrackingEntry.destroy({ truncate: true, cascade: true });
     var rmStudent = models.Student.destroy({ truncate: true, cascade: true });
 
     return rmStudent
-    .then(function() { return rmTeacher; });
-    //.then(function() { return rmStudent; });
+    .then(function() { return rmTeacher; })
+    .then(function() { return rmEntry; });
 }
 
 function get1CheckTrackingData(step) {
@@ -155,11 +157,11 @@ function get1CheckTrackingData(step) {
 
     switch(step.toUpperCase()) {
         case 'PREVIOUSLY MASTERED':
-            stepNum = 0;
+            stepNum = 1;
         value = 'PM';
         break;
         case 'INTRODUCED':
-            stepNum = 1;
+            stepNum = 0;
         value = 'INTRODUCED';
         break;
         case 'MASTERED':
@@ -258,30 +260,36 @@ function get3CheckLanguageTrackingData(step) {
 function createEntry(studentId, sheetType, row) {
     // Determine step number by looking at step
     // Determine value by looking at step
+    var date = moment(row.Date, 'M-D-YYYY');
 
-    var date = moment(row[0], 'M-D-YYYY');
-
-    if (date > new Date(2015, 06, 04)){
+    if (date > new Date(2015, 6, 4)){
         console.warn("Future date '%s' for %s", date, row[0]);
     }
 
-    var activityCode = row[2];
-    var teacherInitials = row[3];
-    var step = row[4];
+    var activityCode = row.Code;
+    var teacherInitials = row["Teacher's Initials"];
+    var step = row.Step;
 
-    var findActivity = Activity.findOne({'code': activityCode}, 'id trackingType').exec();
-    var findTeacher = Teacher.findOne({'lookupInitials': teacherInitials}, 'id').exec();
+    var findActivity = models.Activity.findOne({
+        where: { code: activityCode }
+    });
+    var findTeacher = models.Teacher.findOne({
+        where: { lookupInitials: teacherInitials }
+    });
 
     var entry = { 
         date: date.toDate(),
         studentId: studentId
     };
 
-
     return bPromise.Promise.join(findActivity, findTeacher, function(activity, teacher) {
         var returnVal = false;
 
         if (activity && teacher) {
+
+            // At this point we have an activity ID, a teacher ID.  Need an 
+            // activity step ID, which depends on what data was entered
+            // for the activity and what type of measure is used for the activity.
 
             var trackingData = null;
             switch (sheetType) { 
@@ -299,12 +307,22 @@ function createEntry(studentId, sheetType, row) {
             }
 
             if (trackingData.stepNum >= 0) {
-                entry.activityId = activity.id;
-                entry.trackingType = activity.trackingType;
                 entry.teacherId = teacher.id;
-                entry.trackingData = trackingData;
 
-                returnVal = entry;
+                return models.ActivityStep.findOne({ 
+                    where: {stepNum: trackingData.stepNum, activityId: activity.id }
+                }).then(function(activityStep) {
+                    entry.activityStepId = activityStep.id;
+                    entry.value = trackingData.value;
+                    // WORKING HERE
+                    // we return enough data to construct a tracking entry (I think)
+                    // { date: Mon Aug 11 2014 00:00:00 GMT-0400 (EDT),
+                    //   studentId: 6,
+                    //   teacherId: 59,
+                    //   activityStepId: 1022,
+                    //   value: 'MASTERED' }
+                    return entry;
+                });
             } else { 
                 console.error("Unable to convert '%s' to trackingData");
             }
@@ -326,7 +344,7 @@ function getEntryPromises(studentId, sheetType, rows) {
     rows.shift(); // Drop 1st row since it has headers
     console.log('Getting promises for %s from %d rows', sheetType, rows.length);
 
-    var createArray = rows.map(function(row) { 
+    var createArray = rows.slice(0,1).map(function(row) { 
         return createEntry(studentId, sheetType, row);
     });
 
@@ -346,14 +364,14 @@ removeData().then(function() {
 })
 .then(function(results) {
     var parseArray = sheetTypes.map(function(value) {
-        filename = util.format('%s%s.csv', filenamePrefix, value);
+        var filename = util.format('%s%s.csv', filenamePrefix, value);
         return getParser(filename);
     });
 
     return bPromise.Promise.all(parseArray);
 })
 .then(function(parseResults) {
-    returnObj = { parseResults: parseResults };
+    var returnObj = { parseResults: parseResults };
 
     // Get student ID
     return models.Student.findOne().then(function(student) { 
@@ -370,40 +388,41 @@ removeData().then(function() {
     else if (!returnObj.student) 
         throw new Error('No returnObj.student');
 
-    studentId = returnObj.student.id;
-    results = returnObj.parseResults;
+    var studentId = returnObj.student.id;
+    var results = returnObj.parseResults;
 
     // We have an array of parsed results, with array entry index corresponding 
     // to sheetTypes entry.
 
-    //createEntriesArray = results.map(function(parsedResults, index) {
-        //var sheetType = sheetTypes[index];
-        //if (parsedResults) {
-            //console.log('%s - %s rows returned', sheetType, parsedResults.length);
-            //return getEntryPromises(studentId, sheetType, parsedResults);
-        //} else {
-            //return;
-        //}
-    //});
+    var createEntriesArray = results.slice(0,1).map(function(parsedResults, index) {
+        var sheetType = sheetTypes[index];
+        if (parsedResults) {
+            console.log('%s - %s rows returned', sheetType, parsedResults.length);
+            return getEntryPromises(studentId, sheetType, parsedResults);
+        } else {
+            return;
+        }
+    });
 
-    //return createEntriesArray;
+    return createEntriesArray;
 })
 .then(function(createEntriesArray) {
     // So we need to do something here with all of the promises
     
     var allCreateEntryPromises = [];
-    //for (var i = 0; i < createEntriesArray.length; i++) {
-        //if (createEntriesArray[i])
-            //allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
-    //}
+    for (var i = 0; i < createEntriesArray.length; i++) {
+        if (createEntriesArray[i])
+            allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
+    }
     console.log('Queueing %d promises', allCreateEntryPromises.length);
-    //return bluebird.Promise.all(allCreateEntryPromises);
+    return bPromise.all(allCreateEntryPromises);
 })
-//.then(function(results) {
-    //var validResults = results.filter(function(value) { return value ? true : false; });
-    //console.log('%s valid results', validResults.length);
-    //return TrackingEntry.create(validResults);
-//})
+.then(function(results) {
+    var validResults = results.filter(function(value) { return value ? true : false; });
+    console.log('%s valid results', validResults.length);
+
+    //return models.TrackingEntry.create(trackingEntries);
+})
 .finally(function() {
     console.log('Done with program');
     models.sequelize.close();
