@@ -312,23 +312,21 @@ function createEntry(studentId, sheetType, row) {
                 return models.ActivityStep.findOne({ 
                     where: {stepNum: trackingData.stepNum, activityId: activity.id }
                 }).then(function(activityStep) {
-                    entry.activityStepId = activityStep.id;
-                    entry.value = trackingData.value;
+                    var newEntry = models.TrackingEntry.build();
+                    newEntry.date = entry.date;
+                    newEntry.value = trackingData.value;
+                    newEntry.setActivityStep(activityStep.id, { save: false });
+                    newEntry.setStudent(entry.studentId, { save: false });
+                    newEntry.setTeacher(entry.teacherId, { save: false });
+
                     // WORKING HERE
-                    // we return enough data to construct a tracking entry (I think)
-                    // { date: Mon Aug 11 2014 00:00:00 GMT-0400 (EDT),
-                    //   studentId: 6,
-                    //   teacherId: 59,
-                    //   activityStepId: 1022,
-                    //   value: 'MASTERED' }
-                    return entry;
-                });
+                    debugger;
+                    return newEntry;
+               });
             } else { 
                 console.error("Unable to convert '%s' to trackingData");
             }
-
         } else {
-
             if (!activity)
                 console.error('Failed lookup for activity: %s', activityCode);
             if (!teacher)
