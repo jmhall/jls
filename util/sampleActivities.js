@@ -291,47 +291,44 @@ function createEntry(studentId, sheetType, row) {
             // activity step ID, which depends on what data was entered
             // for the activity and what type of measure is used for the activity.
 
-            var trackingData = null;
+            var stepData = null;
             switch (sheetType) { 
                 case '3 Check Language': 
-                    trackingData = get3CheckLanguageTrackingData(step);
+                    stepData = get3CheckLanguageTrackingData(step);
                     break;
                 case '1 Check':
-                    trackingData = get1CheckTrackingData(step);
+                    stepData = get1CheckTrackingData(step);
                     break;
                 case 'Percentage':
-                    trackingData = getPercentageData(step);
+                    stepData = getPercentageData(step);
                     break;
                 default:
                     return returnVal;
             }
 
-            if (trackingData.stepNum >= 0) {
+            if (stepData.stepNum >= 0) {
                 entry.teacherId = teacher.id;
 
                 return models.ActivityStep.findOne({ 
-                    where: {stepNum: trackingData.stepNum, activityId: activity.id }
+                    where: {stepNum: stepData.stepNum, activityId: activity.id }
                 }).then(function(activityStep) {
                     var newEntry = models.TrackingEntry.build();
                     newEntry.date = entry.date;
-                    newEntry.value = trackingData.value;
+                    newEntry.value = stepData.value;
                     newEntry.setActivityStep(activityStep.id, { save: false });
                     newEntry.setStudent(entry.studentId, { save: false });
                     newEntry.setTeacher(entry.teacherId, { save: false });
 
-                    // WORKING HERE
-                    debugger;
-                    return newEntry;
+                    return models.TrackingEntry.create(newEntry);
                });
             } else { 
-                console.error("Unable to convert '%s' to trackingData");
+                console.error("Unable to convert '%s' to stepData");
             }
         } else {
             if (!activity)
                 console.error('Failed lookup for activity: %s', activityCode);
             if (!teacher)
                 console.error('Failed lookup for teacher: %s', teacherInitials);
-
         }
 
         return returnVal;
@@ -339,26 +336,53 @@ function createEntry(studentId, sheetType, row) {
 }
 
 function getEntryPromises(studentId, sheetType, rows) {
-    rows.shift(); // Drop 1st row since it has headers
-    console.log('Getting promises for %s from %d rows', sheetType, rows.length);
+    console.log("Getting promises for '%s' from %d rows", sheetType, rows.length);
 
-    var createArray = rows.slice(0,1).map(function(row) { 
+    var createArray = rows.map(function(row) { 
         return createEntry(studentId, sheetType, row);
     });
+
+    // Should have array of promises that resolve to new entries here
 
     return createArray;
 }
 
-// Starts here
 
-removeData().then(function() {
-    console.log('Done with removing');
+function createTeachers() {
+    models.Teacher.count().then(function(count) { 
+        if (count === 0) {
+            return models.Student.bulkCreate(teachers);
+        } else {
+            console.log('Skipping teacher creation');
+            return;
+        }
+    });
+}
+
+function createStudents() {
+    models.Student.count().then(function(count) { 
+        if (count === 0) {
+            return models.Student.bulkCreate(students);
+        } else {
+            console.log('Skipping student creation');
+            return;
+        }
+    });
+}
+
+
+// Starts here 
+
+var promise = new bPromise(function(resolve, reject) {
+    resolve();
+});
+
+promise
+.then(function() {
+    return createTeachers();
 })
 .then(function() {
-    return models.Teacher.bulkCreate(teachers);
-})
-.then(function() {
-    return models.Student.bulkCreate(students);
+    return createStudents();
 })
 .then(function(results) {
     var parseArray = sheetTypes.map(function(value) {
@@ -389,10 +413,8 @@ removeData().then(function() {
     var studentId = returnObj.student.id;
     var results = returnObj.parseResults;
 
-    // We have an array of parsed results, with array entry index corresponding 
-    // to sheetTypes entry.
-
-    var createEntriesArray = results.slice(0,1).map(function(parsedResults, index) {
+    var createEntriesArray = results.map(function(parsedResults, index) {
+        // Find type of results we've parsed
         var sheetType = sheetTypes[index];
         if (parsedResults) {
             console.log('%s - %s rows returned', sheetType, parsedResults.length);
@@ -402,22 +424,23 @@ removeData().then(function() {
         }
     });
 
-    return createEntriesArray;
+    return bPromise.settle(createEntriesArray);
 })
-.then(function(createEntriesArray) {
+.then(function(entriesArray) {
     // So we need to do something here with all of the promises
+    debugger;
     
-    var allCreateEntryPromises = [];
-    for (var i = 0; i < createEntriesArray.length; i++) {
-        if (createEntriesArray[i])
-            allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
-    }
-    console.log('Queueing %d promises', allCreateEntryPromises.length);
-    return bPromise.all(allCreateEntryPromises);
+    //var allCreateEntryPromises = [];
+    //for (var i = 0; i < createEntriesArray.length; i++) {
+        //if (createEntriesArray[i])
+            //allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
+    //}
+    //console.log('Queueing %d promises', allCreateEntryPromises.length);
+    //return bPromise.all(allCreateEntryPromises);
 })
 .then(function(results) {
-    var validResults = results.filter(function(value) { return value ? true : false; });
-    console.log('%s valid results', validResults.length);
+    //var validResults = results.filter(function(value) { return value ? true : false; });
+    //console.log('%s valid results', validResults.length);
 
     //return models.TrackingEntry.create(trackingEntries);
 })
