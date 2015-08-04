@@ -312,6 +312,10 @@ function createEntry(studentId, sheetType, row) {
                 return models.ActivityStep.findOne({ 
                     where: {stepNum: stepData.stepNum, activityId: activity.id }
                 }).then(function(activityStep) {
+                    if (!activityStep) {
+                        console.error('Failed lookup for %s, %s', stepData.stepNum, activity.id);
+                        return;
+                    }
                     var newEntry = models.TrackingEntry.build();
                     newEntry.date = entry.date;
                     newEntry.value = stepData.value;
@@ -319,7 +323,9 @@ function createEntry(studentId, sheetType, row) {
                     newEntry.setStudent(entry.studentId, { save: false });
                     newEntry.setTeacher(entry.teacherId, { save: false });
 
-                    return models.TrackingEntry.create(newEntry);
+                    return newEntry.save().catch(function(err) {
+                        console.error('Error: %s', err);
+                    });
                });
             } else { 
                 console.error("Unable to convert '%s' to stepData");
@@ -349,9 +355,9 @@ function getEntryPromises(studentId, sheetType, rows) {
 
 
 function createTeachers() {
-    models.Teacher.count().then(function(count) { 
+    return models.Teacher.count().then(function(count) { 
         if (count === 0) {
-            return models.Student.bulkCreate(teachers);
+            return models.Teacher.bulkCreate(teachers);
         } else {
             console.log('Skipping teacher creation');
             return;
@@ -360,8 +366,9 @@ function createTeachers() {
 }
 
 function createStudents() {
-    models.Student.count().then(function(count) { 
+    return models.Student.count().then(function(count) { 
         if (count === 0) {
+            debugger;
             return models.Student.bulkCreate(students);
         } else {
             console.log('Skipping student creation');
@@ -395,6 +402,9 @@ promise
 .then(function(parseResults) {
     var returnObj = { parseResults: parseResults };
 
+    // parseResults is:
+    // array[index for sheetTypes] = parsedResults
+
     // Get student ID
     return models.Student.findOne().then(function(student) { 
         returnObj.student = student;
@@ -416,6 +426,7 @@ promise
     var createEntriesArray = results.map(function(parsedResults, index) {
         // Find type of results we've parsed
         var sheetType = sheetTypes[index];
+
         if (parsedResults) {
             console.log('%s - %s rows returned', sheetType, parsedResults.length);
             return getEntryPromises(studentId, sheetType, parsedResults);
@@ -424,23 +435,24 @@ promise
         }
     });
 
-    return bPromise.settle(createEntriesArray);
+    // At this point we have an array of arrays, where the inner arrays hold
+    // promises to create tracking entries.
+    return createEntriesArray;
 })
-.then(function(entriesArray) {
+.then(function(createEntriesArray) {
     // So we need to do something here with all of the promises
-    debugger;
     
-    //var allCreateEntryPromises = [];
-    //for (var i = 0; i < createEntriesArray.length; i++) {
-        //if (createEntriesArray[i])
-            //allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
-    //}
-    //console.log('Queueing %d promises', allCreateEntryPromises.length);
-    //return bPromise.all(allCreateEntryPromises);
+    var allCreateEntryPromises = [];
+    for (var i = 0; i < createEntriesArray.length; i++) {
+        if (createEntriesArray[i])
+            allCreateEntryPromises = allCreateEntryPromises.concat(createEntriesArray[i]);
+    }
+    console.log('Queueing %d promises', allCreateEntryPromises.length);
+    return bPromise.all(allCreateEntryPromises);
 })
 .then(function(results) {
-    //var validResults = results.filter(function(value) { return value ? true : false; });
-    //console.log('%s valid results', validResults.length);
+    var validResults = results.filter(function(value) { return value ? true : false; });
+    console.log('%s valid results', validResults.length);
 
     //return models.TrackingEntry.create(trackingEntries);
 })
