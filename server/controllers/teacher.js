@@ -1,5 +1,4 @@
-//var Student = require('../models/student'); 
-//var mongoose = require('mongoose');
+var models = require('../models');
 
 module.exports = {
     home: function(req, res, next) {
@@ -8,13 +7,14 @@ module.exports = {
             students: []
         };
 
-        //Student.find().exec().then(function(students) {
-            //viewModel.students = students;
-
+        models.Student.findAll({
+            attributes: ['id', 'displayName']
+        }).then(function(students) {
+            viewModel.students = students;
             res.render('teacher-home', viewModel);
-        //}).then(null, function(err) {
-            //if (err) next(err);
-        //});
+        }).catch(function(err) {
+            res.send('Error: %s', err);
+        });
     },
     studentHome: function(req, res, next) {
         var viewModel = {
@@ -24,9 +24,9 @@ module.exports = {
             masteredList: []
         };
 
-        //Student.findById(req.params.studentId).exec().then(function(student) {
-            //viewModel.studentName = student.displayName;
+        models.Student.findById(req.params.studentId).then(function(student) {
+            viewModel.studentName = student.displayName;
             res.render('teacher-student-home', viewModel);
-        //});
+        });
     }
 };

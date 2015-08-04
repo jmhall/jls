@@ -5,8 +5,14 @@ var path      = require('path');
 var Sequelize = require('sequelize');
 var basename  = path.basename(module.filename);
 
+var options = { 
+    //logging: false,
+    define: { 
+        freezeTableName: true,
+    }
+};
 var connStr = process.env.DB_CONN_STR || 'postgres://localhost';
-var sequelize = new Sequelize(connStr);
+var sequelize = new Sequelize(connStr, options);
 var db        = {};
 
 fs

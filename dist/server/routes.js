@@ -19,7 +19,6 @@ module.exports.initialize = function(app, configureAuthRoutes) {
 
 
     // Teacher routes
-    //app.all('/teacher', ensureLoggedIn('/login'));
-    //app.get('/teacher', teacherController.home);
-    //app.get('/teacher/student/:studentId', teacherController.studentHome);
+    app.get('/teacher', teacherController.home);
+    app.get('/teacher/student/:studentId', teacherController.studentHome);
 };
