@@ -10,6 +10,7 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         classMethods: {
             associate: function(models) {
+                Student.belongsToMany(models.Activity, { through: 'StudentActivity', foreignKey: 'studentId' });
             }
         }
     });
