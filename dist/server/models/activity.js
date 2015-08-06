@@ -23,6 +23,8 @@ module.exports = function(sequelize, DataTypes) {
                 Activity.hasMany(
                     models.ActivityStep, { as: 'Steps', foreignKey: 'activityId' }
                 );
+
+                Activity.belongsToMany( models.Student, { through: 'StudentActivity', foreignKey: 'activityId' });
             }
         }
     });

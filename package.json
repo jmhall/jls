@@ -29,6 +29,7 @@
     "express-session": "^1.11.3",
     "jade": "^1.11.0",
     "jquery": "^2.1.4",
+    "lodash": "^3.10.1",
     "method-override": "^2.3.3",
     "moment": "^2.10.3",
     "mongoose": "^4.0.6",

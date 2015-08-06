@@ -1,4 +1,5 @@
 var models = require('../models');
+var util = require('util');
 
 module.exports = {
     home: function(req, res, next) {
@@ -20,12 +21,53 @@ module.exports = {
         var viewModel = {
             userName: req.user.displayName,
             studentName: '',
-            workingList: [],
-            masteredList: []
+            activities: []
         };
 
-        models.Student.findById(req.params.studentId).then(function(student) {
+        models.Student.findById(req.params.studentId, {
+            attributes: ['displayName'],
+            include: [ {
+                model: models.Activity,
+                as: 'Activities',
+                required: true,
+                attributes: ['code', 'title'], 
+                include: [{
+                    model: models.ActivityChannel, 
+                    attributes: ['channelNum', 'description']
+                }, {
+                    model: models.ActivityCategory,
+                    attributes: ['categoryNum', 'description']
+                }],
+            }]
+        }).then(function(student) {
             viewModel.studentName = student.displayName;
+            viewModel.activities = student.Activities.map(function(activity) {
+                return {
+                    code: activity.code,
+                    name: util.format('%s - %s', activity.code, activity.title),
+                    channel: activity.ActivityChannel.description,
+                    channelNum: activity.ActivityChannel.channelNum,
+                    category: activity.ActivityCategory.description,
+                    categoryNum: activity.ActivityCategory.categoryNum
+                };
+            }).sort(function(a, b) {
+                if (a.channelNum > b.channelNum)  {
+                    return 1;
+                }
+                else if (a.channelNum < b.channelNum)  {
+                    return -1;
+                }
+                else {
+                    if (a.categoryNum > b.categoryNum) {
+                        return 1;
+                    } else if (a.categoryNum < b.categoryNum) {
+                        return -1;
+                    } else {
+                        return a.code > b.code ? 1 : (a.code < b.code ? -1 : 0);
+                    }
+                }
+            });
+
             res.render('teacher-student-home', viewModel);
         });
     }

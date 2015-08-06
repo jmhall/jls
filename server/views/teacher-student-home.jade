@@ -2,14 +2,24 @@ extends ./layout.jade
 
 block content
     h2: =studentName
-    //-table.table.table-condensed.table-striped
-        //-thead
-            //-tr
-                //-th: Name
-        //-tbody
-            //-if (!students || students.length === 0)
-                //-tr: td: |(No students)
-            //-else 
-                //-each student in students
-                    //-tr
-                        //-td: a(href="/teacher/student/" + student.id): =student.displayName
+    table.table.table-condensed.table-striped
+        thead
+            tr
+                th: |Channel
+                th: |Category
+                th: |Activity
+                th: |Last worked on
+                th: |Status
+                th: |Progress
+        tbody
+            if (!activities || activities.length === 0)
+                tr: td: |(No activities)
+            else 
+                each activity in activities
+                    tr
+                        td: = activity.channel
+                        td: = activity.category
+                        td: = activity.name
+                        td: |[date]
+                        td: |[status]
+                        td: |[progress]
