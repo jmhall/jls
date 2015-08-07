@@ -1,5 +1,6 @@
 var models = require('../models');
 var util = require('util');
+var bbPromise = require('bluebird');
 
 module.exports = {
     home: function(req, res, next) {
@@ -30,7 +31,7 @@ module.exports = {
                 model: models.Activity,
                 as: 'Activities',
                 required: true,
-                attributes: ['code', 'title'], 
+                attributes: ['id', 'code', 'title'], 
                 include: [{
                     model: models.ActivityChannel, 
                     attributes: ['channelNum', 'description']
@@ -41,8 +42,10 @@ module.exports = {
             }]
         }).then(function(student) {
             viewModel.studentName = student.displayName;
+            viewModel.student = student;
             viewModel.activities = student.Activities.map(function(activity) {
                 return {
+                    activityId: activity.id,
                     code: activity.code,
                     name: util.format('%s - %s', activity.code, activity.title),
                     channel: activity.ActivityChannel.description,
@@ -68,6 +71,17 @@ module.exports = {
                 }
             });
 
+            return viewModel;
+
+        }).then(function() {
+            var promises = viewModel.activities.map(function(activity) {
+                return viewModel.student.getActivityStatus(activity.activityId).then(function(status) {
+                    activity.status = status;
+                });
+            });
+
+            return bbPromise.all(promises);
+        }).then(function() {
             res.render('teacher-student-home', viewModel);
         });
     }

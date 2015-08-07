@@ -5,8 +5,6 @@ block content
     table.table.table-condensed.table-striped
         thead
             tr
-                th: |Channel
-                th: |Category
                 th: |Activity
                 th: |Last worked on
                 th: |Status
@@ -17,9 +15,8 @@ block content
             else 
                 each activity in activities
                     tr
-                        td: = activity.channel
-                        td: = activity.category
                         td: = activity.name
-                        td: |[date]
-                        td: |[status]
-                        td: |[progress]
+                        td(class=activity.status.priorEntryDateClass)
+                            = activity.status.priorEntryDate
+                        td: = activity.status.status
+                        td: = activity.status.progress

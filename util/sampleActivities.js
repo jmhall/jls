@@ -141,16 +141,6 @@ function getParser(filename) {
     });
 }
 
-function removeData() {
-    var rmTeacher = models.Teacher.destroy({ truncate: true, cascade: true });
-    var rmEntry = models.TrackingEntry.destroy({ truncate: true, cascade: true });
-    var rmStudent = models.Student.destroy({ truncate: true, cascade: true });
-
-    return rmStudent
-    .then(function() { return rmTeacher; })
-    .then(function() { return rmEntry; });
-}
-
 function get1CheckTrackingData(step) {
     var stepNum = -1;
     var value = '';
@@ -180,14 +170,19 @@ function getPercentageData(step) {
     step = parseInt(step);
     if (step < 21) {
         stepNum = 1;
+        value = '1';
     } else if (step < 41) {
         stepNum = 2;
+        value = '1';
     } else if (step < 61) {
         stepNum = 3;
+        value = '1';
     } else if (step < 81) {
         stepNum = 4;
+        value = '1';
     } else  {
         stepNum = 5;
+        value = '1';
     }
     
     value = '1';
@@ -201,7 +196,7 @@ function get3CheckLanguageTrackingData(step) {
 
     switch(step.toUpperCase()) {
         case 'PREVIOUSLY MASTERED':
-            stepNum = 0;
+            stepNum = 5;
         value = 'PM';
         break;
         case 'PREVIOUSLY INTRODUCED':
@@ -214,43 +209,43 @@ function get3CheckLanguageTrackingData(step) {
         break;
         case 'FO2 REVIEW':
             stepNum = 1;
-        value = 'FO2 REVIEW';
+        value = 'REVIEW';
         break;
         case 'FO2 MASTERED':
             stepNum = 1;
-        value = 'FO2 MASTERED';
+        value = 'MASTERED';
         break;
         case 'FO3 REVIEW':
             stepNum = 2;
-        value = 'FO3 REVIEW';
+        value = 'REVIEW';
         break;
         case 'FO3 MASTERED':
             stepNum = 2;
-        value = 'FO3 MASTERED';
+        value = 'MASTERED';
         break;
         case 'V1 REVIEW':
             stepNum = 3;
-        value = 'V1 REVIEW';
+        value = 'REVIEW';
         break;
         case 'V1 MASTERED':
             stepNum = 3;
-        value = 'V1 MASTERED';
+        value = 'MASTERED';
         break;
         case 'V2 REVIEW':
             stepNum = 4;
-        value = 'V2 REVIEW';
+        value = 'REVIEW';
         break;
         case 'V2 MASTERED':
             stepNum = 4;
-        value = 'V2 MASTERED';
+        value = 'MASTERED';
         break;
         case 'V3 REVIEW':
             stepNum = 5;
-        value = 'V3 REVIEW';
+        value = 'REVIEW';
         break;
         case 'V3 MASTERED':
             stepNum = 5;
-        value = 'V3 MASTERED';
+        value = 'MASTERED';
         break;
     }// switch
 
@@ -368,7 +363,6 @@ function createTeachers() {
 function createStudents() {
     return models.Student.count().then(function(count) { 
         if (count === 0) {
-            debugger;
             return models.Student.bulkCreate(students);
         } else {
             console.log('Skipping student creation');
@@ -380,11 +374,12 @@ function createStudents() {
 
 // Starts here 
 
-var promise = new bPromise(function(resolve, reject) {
-    resolve();
-});
+//var promise = new bPromise(function(resolve, reject) {
+    //resolve();
+//});
 
-promise
+//promise
+models.TrackingEntry.destroy({truncate: true})
 .then(function() {
     return createTeachers();
 })
