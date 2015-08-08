@@ -26,7 +26,7 @@ module.exports = {
         };
 
         models.Student.findById(req.params.studentId, {
-            attributes: ['displayName'],
+            attributes: ['id', 'displayName'],
             include: [ {
                 model: models.Activity,
                 as: 'Activities',
@@ -38,20 +38,34 @@ module.exports = {
                 }, {
                     model: models.ActivityCategory,
                     attributes: ['categoryNum', 'description']
-                }],
+                }, {
+                    model: models.ActivityStep,
+                    as: 'Steps',
+                    attributes: ['stepNum']
+                }, { 
+                    model: models.TrackingType,
+                    attributes: ['code']
+                }]
             }]
         }).then(function(student) {
             viewModel.studentName = student.displayName;
             viewModel.student = student;
+            viewModel.studentId = student.id;
             viewModel.activities = student.Activities.map(function(activity) {
                 return {
                     activityId: activity.id,
+                    trackingType: activity.TrackingType.code,
+                    stepsCount: activity.Steps ? activity.Steps.length : 0,
                     code: activity.code,
                     name: util.format('%s - %s', activity.code, activity.title),
                     channel: activity.ActivityChannel.description,
                     channelNum: activity.ActivityChannel.channelNum,
                     category: activity.ActivityCategory.description,
-                    categoryNum: activity.ActivityCategory.categoryNum
+                    categoryNum: activity.ActivityCategory.categoryNum,
+                    priorEntryDate: null,
+                    priorEntryDateClass: '',
+                    status: '',
+                    progress: 0
                 };
             }).sort(function(a, b) {
                 if (a.channelNum > b.channelNum)  {
@@ -75,8 +89,10 @@ module.exports = {
 
         }).then(function() {
             var promises = viewModel.activities.map(function(activity) {
-                return viewModel.student.getActivityStatus(activity.activityId).then(function(status) {
-                    activity.status = status;
+                return models.Student.getActivityStatus(viewModel.studentId, activity.activityId).then(function(status) {
+                    activity.status = status.status;
+                    activity.priorEntryDate = status.priorEntryDate;
+                    activity.progress = status.progress;
                 });
             });
 

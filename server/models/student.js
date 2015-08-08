@@ -17,33 +17,25 @@ module.exports = function(sequelize, DataTypes) {
                 Student.belongsToMany(models.Activity, { through: 'StudentActivity', foreignKey: 'studentId' });
 
                 Student.hasMany(models.TrackingEntry, { as: 'TrackingEntries', foreignKey: 'studentId' });
-            }
-        },
-        instanceMethods: {
-            getActivityStatus: function(activityId, asOfDate) {
+            },
+            getActivityStatus: function(studentId, activityId, asOfDate) {
                 if (!activityId) 
                     throw new Error('activityId required');
 
                 var status = {
                     priorEntryDate: null,
-                    priorEntryDateClass: '',
                     progress: 0,
-                    status: '[none]'
+                    status: 'assigned'
                 };
 
-                return this.sequelize.query('select "TE".* from "TrackingEntry" as "TE" join "ActivityStep" as "AS" on "TE"."activityStepId" = "AS"."id" where "TE"."studentId" = 1 and "AS"."activityId" = ?', { replacements: [activityId] }).then(function(trackingEntries) {
-
-                    var mostRecent = _.max(trackingEntries[0], 'date');
-                    if (mostRecent) {
-                        var mostRecentDate = moment(mostRecent.date);
-                        var daysSince = moment().diff(mostRecentDate, 'days');
-                        status.priorEntryDate = mostRecentDate.format('MM/DD/YYYY');
-                        if (daysSince > '197')
-                            status.priorEntryDateClass = 'text-warning';
-                        else if (daysSince > 137) 
-                            status.priorEntryDateClass = 'text-danger';
-                        else 
-                            status.priorEntryDateClass = 'text-success';
+                return this.sequelize.query('select "TE"."date", "TE"."value", "AS"."stepNum" from "TrackingEntry" as "TE" join "ActivityStep" as "AS" on "TE"."activityStepId" = "AS"."id" where "TE"."studentId" = ? and "AS"."activityId" = ?', { 
+                    replacements: [studentId, activityId] 
+                }).then(function(trackingEntries) {
+                    if (trackingEntries.length > 0) {
+                        var mostRecent = _.max(trackingEntries[0], 'date');
+                        if (mostRecent) {
+                           status.priorEntryDate = moment(mostRecent.date).format('MM/DD/YYYY');
+                        }
                     }
 
                     return status;

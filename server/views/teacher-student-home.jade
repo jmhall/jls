@@ -9,6 +9,7 @@ block content
                 th: |Last worked on
                 th: |Status
                 th: |Progress
+                th: |temp
         tbody
             if (!activities || activities.length === 0)
                 tr: td: |(No activities)
@@ -16,7 +17,8 @@ block content
                 each activity in activities
                     tr
                         td: = activity.name
-                        td(class=activity.status.priorEntryDateClass)
-                            = activity.status.priorEntryDate
-                        td: = activity.status.status
-                        td: = activity.status.progress
+                        td(class=activity.priorEntryDateClass)
+                            = activity.priorEntryDate
+                        td: = activity.status
+                        td: = activity.progress
+                        td: = activity.trackingType + ' ' + activity.stepsCount
