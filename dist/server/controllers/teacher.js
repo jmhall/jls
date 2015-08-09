@@ -1,6 +1,29 @@
 var models = require('../models');
 var util = require('util');
 var bbPromise = require('bluebird');
+var moment = require('moment');
+
+var codeRe = /([0-9]+)\.([0-9]+)\.([0-9]+)-?([0-9]+)?/;
+
+function getCodeSort(code) {
+    var match = codeRe.exec(code);
+    if (!match) {
+        return 0;
+    }  else {
+        var channel = ('0000' + match[1]).slice(-4);
+        var category = ('0000' + match[2]).slice(-4);
+        var num = ('0000' + match[3]).slice(-4);
+        var subNum = '0000';
+        if (match[4]) 
+            subNum = ('0000' + match[4]).slice(-4);
+
+        var sortNum = util.format('%s%s%s%s', channel, category, num, subNum);
+
+        return parseInt(sortNum);
+    }
+
+    return 0;
+}
 
 module.exports = {
     home: function(req, res, next) {
@@ -45,8 +68,8 @@ module.exports = {
             viewModel.student = student;
             viewModel.activities = student.Activities.map(function(activity) {
                 var activityUrl = util.format('/teacher/student/%s/activity/%s',
-                                            student.id, 
-                                            activity.id);
+                                              student.id, 
+                activity.id);
 
                 return {
                     activityUrl: activityUrl,
@@ -65,21 +88,10 @@ module.exports = {
                     progress: 0
                 };
             }).sort(function(a, b) {
-                if (a.channelNum > b.channelNum)  {
-                    return 1;
-                }
-                else if (a.channelNum < b.channelNum)  {
-                    return -1;
-                }
-                else {
-                    if (a.categoryNum > b.categoryNum) {
-                        return 1;
-                    } else if (a.categoryNum < b.categoryNum) {
-                        return -1;
-                    } else {
-                        return a.code > b.code ? 1 : (a.code < b.code ? -1 : 0);
-                    }
-                }
+                var aSort = getCodeSort(a.code);
+                var bSort = getCodeSort(b.code);
+
+                return (aSort > bSort ? 1 : (aSort < bSort) ? -1 : 0);
             });
 
             return viewModel;
@@ -102,7 +114,68 @@ module.exports = {
             res.send('Error: %s', err);
         });
     },
+
     studentIndividualActivity: function(req, res) {
-        res.send(util.format('Student: %s, Activity: %s', req.params.studentId, req.params.activityId));
+        var viewModel = {
+            userName: req.user.displayName,
+            studentName: '',
+            activityTitle: '',
+            activityStatus: '',
+            activityHistory: []
+        };
+
+        return models.Student.findById(req.params.studentId, {
+            attributes: ['id', 'displayName']
+        }).then(function(student) {
+            viewModel.studentName = student.displayName;
+            viewModel.student = student;
+
+            return models.Activity.findById(req.params.activityId, {
+                attributes: ['id', 'code', 'title', 'description'],
+                include: [{
+                    model: models.TrackingType
+                }]
+            });
+
+        }).then(function(activity) {
+            viewModel.activityTitle = util.format('%s - %s', activity.code, activity.title);
+            
+            return viewModel.student.getActivityStatus(viewModel.student.id, activity.id);
+        }).then(function(status) {
+            viewModel.activityStatus = status.status;
+
+            return models.TrackingEntry.findAll({ 
+                attributes: ['date', 'value'],
+                where: {
+                    studentId: viewModel.student.id
+                },
+                include: [{
+                    model: models.ActivityStep,
+                    attributes: ['stepNum', ['title', 'stepTitle']],
+                    include: {
+                        model: models.Activity,
+                        attributes: [['id', 'activityId']],
+                        where: { id: req.params.activityId }
+                    }
+                }, {
+                    model: models.Teacher,
+                    attributes: [['lookupInitials', 'teacherName']]
+                }],
+                order: [['date', 'DESC']]
+            });
+
+        }).then(function(entries) {
+            viewModel.activityHistory = entries.map(function(entry) {
+                debugger;
+                return {
+                    date: moment(entry.date).format('MM/DD/YYYY'),
+                    teacher: entry.Teacher.dataValues.teacherName
+                };
+            });
+
+            res.render('teacher-student-individual-activity', viewModel);
+        }).catch(function(err) {
+            res.status(500).send('Error: ' + err);
+        });
     }
 };

@@ -270,6 +270,40 @@ function get3CheckLanguageTrackingData(step) {
     return { stepNum: stepNum, value: value };
 }
 
+function get3CheckStepsTrackingData(step) {
+    var stepNum = -1;
+    var value = '';
+
+    switch(step.toUpperCase()) {        
+        case 'PREVIOUSLY INTRODUCED':
+            stepNum = 0;
+        value = 'PI';
+        break;
+        case 'INTRODUCED':
+            stepNum = 0;
+        value = 'INTRODUCED';
+        break;
+        case 'STEP 1':
+            stepNum = 1;
+        value = 'MASTERED';
+        break;
+        case 'STEP 2':
+            stepNum = 2;
+        value = 'MASTERED';
+        break;
+        case 'STEP 3':
+            stepNum = 3;
+        value = 'MASTERED';
+        break;
+        case 'STEP 4':
+            stepNum = 4;
+        value = 'MASTERED';
+        break;
+    }// switch
+
+    return { stepNum: stepNum, value: value };
+}
+
 function createEntry(studentId, sheetType, row) {
     // Determine step number by looking at step
     // Determine value by looking at step
@@ -317,6 +351,9 @@ function createEntry(studentId, sheetType, row) {
                     break;
                 case 'YesNo':
                     stepData = getYesNoTrackingData(step);
+                    break;
+                case '3 Check Steps':
+                    stepData = get3CheckStepsTrackingData(step);
                     break;
                 default:
                     return returnVal;

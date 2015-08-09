@@ -1,0 +1,42 @@
+extends ./layout.jade
+
+block content
+    h2: =studentName
+    h3: =activityTitle
+    table.table
+        tr
+            td(style="width: 15%"): b: |Activity Description:
+            td(style="width: 35%"): |[activity description]
+            td(style="width: 15%"): b: |Frequency:
+            td: |[freq]
+        tr
+            td: b: |Date introduced:
+            td: |[Date introduced]
+            td: b: |Duration:
+            td: |[duration]
+        tr
+            td: b: |Status:
+            td: =activityStatus
+            td: |&nbsp;
+            td: |&nbsp;
+
+
+    h4: |Activity History
+    div.limit-height
+        table.table.table-condensed.table-striped.table-bordered
+            thead
+                tr
+                    th: |Date
+                    th: |Teacher
+                    th: |Step
+                    th: |Comments
+            tbody
+                if (!activityHistory || activityHistory.length === 0)
+                    tr: td(colspan="4"): |(No activities)
+                else 
+                    each activity in activityHistory
+                        tr
+                            td: =activity.date
+                            td: =activity.teacher
+                            td: |step
+                            td: |comments

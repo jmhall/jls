@@ -104,6 +104,8 @@ function updateStatus(status, trackingEntries) {
     status.progress = maxStepNum / status.stepCount;
     if (maxStepNum === status.stepCount) 
         status.status = 'mastered';
+    else 
+        status.status = 'in progress';
 
 
 }
