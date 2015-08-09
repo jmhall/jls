@@ -141,6 +141,24 @@ function getParser(filename) {
     });
 }
 
+function getYesNoTrackingData(step) {
+    var stepNum = -1;
+    var value = '';
+
+    switch(step.toUpperCase()) {
+        case 'YES':
+            stepNum = 1;
+        value = 'YES';
+        break;
+        case 'NO':
+            stepNum = 1;
+        value = 'NO';
+        break;
+    } // switch
+ 
+    return { stepNum: stepNum, value: value };
+}
+
 function get1CheckTrackingData(step) {
     var stepNum = -1;
     var value = '';
@@ -296,6 +314,9 @@ function createEntry(studentId, sheetType, row) {
                     break;
                 case 'Percentage':
                     stepData = getPercentageData(step);
+                    break;
+                case 'YesNo':
+                    stepData = getYesNoTrackingData(step);
                     break;
                 default:
                     return returnVal;

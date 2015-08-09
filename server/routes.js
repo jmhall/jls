@@ -21,4 +21,5 @@ module.exports.initialize = function(app, configureAuthRoutes) {
     // Teacher routes
     app.get('/teacher', teacherController.home);
     app.get('/teacher/student/:studentId', teacherController.studentHome);
+    app.get('/teacher/student/:studentId/activity/:activityId', teacherController.studentIndividualActivity);
 };

@@ -1,24 +1,45 @@
 extends ./layout.jade
 
 block content
-    h2: =studentName
-    table.table.table-condensed.table-striped
-        thead
-            tr
-                th: |Activity
-                th: |Last worked on
-                th: |Status
-                th: |Progress
-                th: |temp
-        tbody
-            if (!activities || activities.length === 0)
-                tr: td: |(No activities)
-            else 
-                each activity in activities
+    h2.pull-left: =studentName
+    .clearfix
+    div.col-md-6
+        h4: |Working
+        div.limit-height
+            table.table.table-condensed.table-striped.table-bordered
+                thead
                     tr
-                        td: = activity.name
-                        td(class=activity.priorEntryDateClass)
-                            = activity.priorEntryDate
-                        td: = activity.status
-                        td: = activity.progress
-                        td: = activity.trackingType + ' ' + activity.stepsCount
+                        th: |Activity
+                        th: |Last entry
+                        th: |Progress
+                tbody
+                    if (!activities || activities.length === 0)
+                        tr: td: |(No activities)
+                    else 
+                        each activity in activities
+                            if activity.status !== 'mastered'
+                                tr
+                                    td: a(href=activity.activityUrl)
+                                        = activity.name
+                                    td(class=activity.priorEntryDateClass)
+                                        = activity.priorEntryDate
+                                    td: = Math.round(activity.progress * 100) + ' %'
+    div.col-md-6
+        h4: |Mastered
+        div.limit-height
+            table.table.table-condensed.table-striped.table-bordered
+                thead
+                    tr
+                        th: |Activity
+                        th: |Last entry
+                tbody
+                    if (!activities || activities.length === 0)
+                        tr: td: |(No activities)
+                    else 
+                        each activity in activities
+                            if activity.status === 'mastered'
+                                tr
+                                    td: a(href=activity.activityUrl)
+                                        = activity.name
+                                    td(class=activity.priorEntryDateClass)
+                                        = activity.priorEntryDate

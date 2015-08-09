@@ -18,6 +18,8 @@ module.exports = function(sequelize, DataTypes) {
 
                 Student.hasMany(models.TrackingEntry, { as: 'TrackingEntries', foreignKey: 'studentId' });
             },
+        },
+        instanceMethods: {
             getActivityStatus: function(studentId, activityId, asOfDate) {
                 if (!activityId) 
                     throw new Error('activityId required');
@@ -25,27 +27,83 @@ module.exports = function(sequelize, DataTypes) {
                 var status = {
                     priorEntryDate: null,
                     progress: 0,
-                    status: 'assigned'
+                    status: 'assigned',
+                    trackingType: '',
+                    stepCount: 0
                 };
 
-                return this.sequelize.query('select "TE"."date", "TE"."value", "AS"."stepNum" from "TrackingEntry" as "TE" join "ActivityStep" as "AS" on "TE"."activityStepId" = "AS"."id" where "TE"."studentId" = ? and "AS"."activityId" = ?', { 
-                    replacements: [studentId, activityId] 
+                return this.sequelize.models.Activity.findById(activityId, { 
+                    include: [{
+                        model: this.sequelize.models.TrackingType,
+                        attributes: ['code']
+                    }],
+                    attributes: ['id']
+                }).then(function(activity) {
+
+                    status.trackingType = activity.TrackingType.code;
+
+                    return this.sequelize.models.ActivityStep.count({
+                        where: {
+                            activityId: activity.id,
+                            stepNum: {
+                                $gt: 0
+                            }
+                        }
+                    });
+                }).then(function(stepCount) {
+
+                    status.stepCount = stepCount;
+
+                    return this.sequelize.query('select "TE"."date", "TE"."value", "AS"."stepNum" from "TrackingEntry" as "TE" join "ActivityStep" as "AS" on "TE"."activityStepId" = "AS"."id" where "TE"."studentId" = ? and "AS"."activityId" = ?', { 
+                        replacements: [studentId, activityId] 
+                    });
+
                 }).then(function(trackingEntries) {
+
                     if (trackingEntries.length > 0) {
                         var mostRecent = _.max(trackingEntries[0], 'date');
                         if (mostRecent) {
-                           status.priorEntryDate = moment(mostRecent.date).format('MM/DD/YYYY');
+                            status.priorEntryDate = moment(mostRecent.date).format('MM/DD/YYYY');
                         }
+
+                        updateStatus(status, trackingEntries[0]);
+
                     }
 
                     return status;
                 });
-
-                //return new bbPromise(function(resolve, reject) {
-                    //resolve(status);
-                //});
-           }
+            }
         }
     });
     return Student;
 };
+
+function updateStatus(status, trackingEntries) {
+    var maxStepNum = 0;
+    if (status.trackingType === '1 CHECK' || status.trackingType === '3 CHECK') {
+        // Look for highest stepNum with 'PM' or 'MASTERED'
+        maxStepNum = trackingEntries.reduce(function(prev, curr) {
+            if (curr.value === 'PM' || curr.value === 'MASTERED') {
+                if (curr.stepNum > prev)
+                    return curr.stepNum;
+            }
+            return prev;
+        }, 0);
+    }
+
+    if (status.trackingType === 'Y/N') {
+        maxStepNum = trackingEntries.reduce(function(prev, curr) {
+            if (curr.value === 'YES')
+                if (curr.stepNum > prev) 
+                    return curr.stepNum;
+
+            return prev;
+        }, 0);
+    }
+    
+    status.progress = maxStepNum / status.stepCount;
+    if (maxStepNum === status.stepCount) 
+        status.status = 'mastered';
+
+
+}

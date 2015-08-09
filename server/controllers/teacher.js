@@ -38,24 +38,21 @@ module.exports = {
                 }, {
                     model: models.ActivityCategory,
                     attributes: ['categoryNum', 'description']
-                }, {
-                    model: models.ActivityStep,
-                    as: 'Steps',
-                    attributes: ['stepNum']
-                }, { 
-                    model: models.TrackingType,
-                    attributes: ['code']
                 }]
             }]
         }).then(function(student) {
             viewModel.studentName = student.displayName;
             viewModel.student = student;
-            viewModel.studentId = student.id;
             viewModel.activities = student.Activities.map(function(activity) {
+                var activityUrl = util.format('/teacher/student/%s/activity/%s',
+                                            student.id, 
+                                            activity.id);
+
                 return {
+                    activityUrl: activityUrl,
                     activityId: activity.id,
-                    trackingType: activity.TrackingType.code,
-                    stepsCount: activity.Steps ? activity.Steps.length : 0,
+                    trackingType: '',
+                    stepsCount: 0,
                     code: activity.code,
                     name: util.format('%s - %s', activity.code, activity.title),
                     channel: activity.ActivityChannel.description,
@@ -89,16 +86,23 @@ module.exports = {
 
         }).then(function() {
             var promises = viewModel.activities.map(function(activity) {
-                return models.Student.getActivityStatus(viewModel.studentId, activity.activityId).then(function(status) {
+                return viewModel.student.getActivityStatus(viewModel.student.id, activity.activityId).then(function(status) {
                     activity.status = status.status;
                     activity.priorEntryDate = status.priorEntryDate;
                     activity.progress = status.progress;
+                    activity.trackingType = status.trackingType;
+                    activity.stepCount = status.stepCount;
                 });
             });
 
             return bbPromise.all(promises);
         }).then(function() {
             res.render('teacher-student-home', viewModel);
+        }).catch(function(err) {
+            res.send('Error: %s', err);
         });
+    },
+    studentIndividualActivity: function(req, res) {
+        res.send(util.format('Student: %s, Activity: %s', req.params.studentId, req.params.activityId));
     }
 };
