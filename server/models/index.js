@@ -9,6 +9,10 @@ var options = {
     //logging: false,
     define: { 
         freezeTableName: true,
+    },
+    pool: {
+        max: process.env.DB_MAX_POOL || 25,
+        min: process.env.DB_MIN_POOL || 0
     }
 };
 var connStr = process.env.DB_CONN_STR || 'postgres://localhost';
