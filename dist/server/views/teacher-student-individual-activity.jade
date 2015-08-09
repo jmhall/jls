@@ -11,7 +11,7 @@ block content
             td: |[freq]
         tr
             td: b: |Date introduced:
-            td: |[Date introduced]
+            td: = dateIntroduced
             td: b: |Duration:
             td: |[duration]
         tr
@@ -38,5 +38,5 @@ block content
                         tr
                             td: =activity.date
                             td: =activity.teacher
-                            td: |step
-                            td: |comments
+                            td: =activity.value
+                            td: |&nbsp;

@@ -2,6 +2,7 @@ var models = require('../models');
 var util = require('util');
 var bbPromise = require('bluebird');
 var moment = require('moment');
+var _ = require('lodash');
 
 var codeRe = /([0-9]+)\.([0-9]+)\.([0-9]+)-?([0-9]+)?/;
 
@@ -119,6 +120,7 @@ module.exports = {
         var viewModel = {
             userName: req.user.displayName,
             studentName: '',
+            dateIntroduced: '',
             activityTitle: '',
             activityStatus: '',
             activityHistory: []
@@ -166,12 +168,21 @@ module.exports = {
 
         }).then(function(entries) {
             viewModel.activityHistory = entries.map(function(entry) {
-                debugger;
                 return {
                     date: moment(entry.date).format('MM/DD/YYYY'),
-                    teacher: entry.Teacher.dataValues.teacherName
+                    teacher: entry.Teacher.dataValues.teacherName,
+                    value: util.format('%s - %s', entry.ActivityStep.dataValues.stepTitle, entry.value),
+                    stepNum: entry.ActivityStep.dataValues.stepNum
                 };
             });
+
+            var introEntry = _.find(viewModel.activityHistory, function(history) {
+                return history.stepNum === 0;
+            });
+
+            if (introEntry) 
+                viewModel.dateIntroduced = introEntry.date;
+
 
             res.render('teacher-student-individual-activity', viewModel);
         }).catch(function(err) {
