@@ -17,6 +17,10 @@ module.exports = function(sequelize, DataTypes) {
                     models.ActivityCategory, { foreignKey: 'activityCategoryId' }
                 );
                 Activity.belongsTo(
+                    models.Activity, { as: 'ParentActivity', foreignKey: 'parentActivityId' }
+                );
+
+                Activity.belongsTo(
                     models.TrackingType, { foreignKey: 'trackingTypeId' }
                 );
 
