@@ -6,8 +6,8 @@ function StudentActivitySerializer(studentActivity) {
             'student-activities', 
             studentActivity, {
                 attributes: [
-                    'student',
-                    'activity'
+                    'startDate',
+                    'endDate'
                 ],
                 student: {
                     ref: 'id'

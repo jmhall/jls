@@ -11,12 +11,10 @@ module.exports = function(req, res) {
             attributes: ['id']
         }
     }).then(function(student) {
-
-
-        if (student)
-            res.send('student id ' + student.id);
-        else 
-            res.send('No students');
+        if (student) {
+            var json = new StudentActivitySerializer(student).serialize();
+            res.send(json);
+        }
     }, function(err) {
         res.send('Error ' + err);
 
