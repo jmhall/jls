@@ -6,7 +6,7 @@ module.exports = function(sequelize, DataTypes) {
         title: {type: DataTypes.STRING, allowNull: false},
         description: {type: DataTypes.TEXT, allowNull: false, defaultValue: ''},
         stepsAreProgressive: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false},
-        customPerStudent: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false} 
+        customPerStudent: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false}
     }, {
         classMethods: {
             associate: function(models) {
