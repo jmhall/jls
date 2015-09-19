@@ -21,7 +21,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         instanceMethods: {
             getActivityStatus: function(studentId, activityId, asOfDate) {
-                if (!activityId) 
+                if (!activityId)
                     throw new Error('activityId required');
 
                 var status = {
@@ -32,7 +32,7 @@ module.exports = function(sequelize, DataTypes) {
                     stepCount: 0
                 };
 
-                return this.sequelize.models.Activity.findById(activityId, { 
+                return this.sequelize.models.Activity.findById(activityId, {
                     include: [{
                         model: this.sequelize.models.TrackingType,
                         attributes: ['code']
@@ -54,8 +54,8 @@ module.exports = function(sequelize, DataTypes) {
 
                     status.stepCount = stepCount;
 
-                    return this.sequelize.query('select "TE"."date", "TE"."value", "AS"."stepNum" from "TrackingEntry" as "TE" join "ActivityStep" as "AS" on "TE"."activityStepId" = "AS"."id" where "TE"."studentId" = ? and "AS"."activityId" = ?', { 
-                        replacements: [studentId, activityId] 
+                    return this.sequelize.query('select "TE"."date", "TE"."value", "AS"."stepNum" from "TrackingEntry" as "TE" join "ActivityStep" as "AS" on "TE"."activityStepId" = "AS"."id" where "TE"."studentId" = ? and "AS"."activityId" = ?', {
+                        replacements: [studentId, activityId]
                     });
 
                 }).then(function(trackingEntries) {
@@ -94,17 +94,17 @@ function updateStatus(status, trackingEntries) {
     if (status.trackingType === 'Y/N') {
         maxStepNum = trackingEntries.reduce(function(prev, curr) {
             if (curr.value === 'YES')
-                if (curr.stepNum > prev) 
+                if (curr.stepNum > prev)
                     return curr.stepNum;
 
             return prev;
         }, 0);
     }
-    
+
     status.progress = maxStepNum / status.stepCount;
-    if (maxStepNum === status.stepCount) 
+    if (maxStepNum === status.stepCount)
         status.status = 'mastered';
-    else 
+    else
         status.status = 'in progress';
 
 
