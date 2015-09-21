@@ -1,7 +1,6 @@
 'use strict';
 var moment = require('moment');
 var bbPromise = require('bluebird');
-var models = require('./index');
 var _ = require('lodash');
 
 module.exports = function(sequelize, DataTypes) {

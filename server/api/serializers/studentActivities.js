@@ -1,16 +1,27 @@
 var JsonApiSerializer = require('jsonapi-serializer');
+var url = require('url');
+var util = require('util');
 
-function StudentActivitySerializer(studentActivity) {
+function StudentActivitySerializer(studentActivity, baseUrl) {
     this.serialize = function() {
+
         return new JsonApiSerializer(
-            'student-activities', 
+            'student-activities',
             studentActivity, {
                 attributes: [
                     'startDate',
-                    'endDate'
+                    'endDate',
+                    'student'
                 ],
                 student: {
-                    ref: 'id'
+                    ref: 'id',
+                    included: false,
+                    attributes: []
+                },
+                dataLinks: {
+                    self: function(sa) {
+                        return util.format('%s/student-activities/%s', baseUrl, sa.id);
+                    }
                 }
             }
         );

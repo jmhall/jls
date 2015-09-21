@@ -17,9 +17,9 @@ var cookieSecret = process.env.COOKIE_SECRET || 'my-secret-value';
 var sessionSecret = process.env.SESSION_SECRET || 'my-secret-value';
 var logFormat = process.env.NODE_LOG_FORMAT || 'dev';
 var port = process.env.PORT || 8080;
-var staticDir = process.env.NODE_STATIC_DIR || 
+var staticDir = process.env.NODE_STATIC_DIR ||
     path.join(__dirname, '../../client');
-var uploadDir = process.env.NODE_UPLOAD_DIR || 
+var uploadDir = process.env.NODE_UPLOAD_DIR ||
     path.join(__dirname, '../../public/upload/temp');
 
 
@@ -31,7 +31,7 @@ module.exports = function(app) {
     // Get authentication configurator
     var strategyName = process.env.USE_LOCAL_AUTH ? 'local' : 'wsfed-saml2';
 
-    if (strategyName === 'local') 
+    if (strategyName === 'local')
         console.warn('Using local authentication');
 
     authConfig = null;
@@ -64,7 +64,7 @@ module.exports = function(app) {
     app.use(methodOverride());
     app.use(flash());
     app.use(errorHandler());
-    
+
     routes.initialize(app, authConfig.configureRoutes);
 
     return app;
